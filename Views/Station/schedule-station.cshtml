@@ -1,0 +1,718 @@
+﻿@using Newtonsoft.Json;
+
+@{
+    ViewBag.Title = "ตารางกำหนดการ";
+    ViewBag.pTitle = "ตารางกำหนดการ";
+    ViewBag.pageTitle = "ตารางกำหนดการ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <!-- fullcalendar css -->
+    <!-- jsvectormap css -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Swiper slider css-->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    <!-- multi.js css -->
+    <link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+    <!-- autocomplete css -->
+    <link rel="stylesheet" href="~/assets/libs/@@tarekraafat/autocomplete.js/css/autoComplete.css" />
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="event-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="add-event-tab" data-bs-toggle="tab" data-bs-target="#add-event-form" type="button" role="tab" aria-controls="add-event-form" aria-selected="true">เพิ่มกิจกรรม</button>
+                    </li>
+                    @* <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="edit-event-tab" data-bs-toggle="tab" data-bs-target="#edit-event-form" type="button" role="tab" aria-controls="edit-event-form" aria-selected="false">แก้ไขกิจกรรม</button>
+                    </li>*@
+                </ul>
+                <div class="tab-content mt-3" id="event-tabs-content">
+                    <div class="tab-pane fade show active" id="add-event-form" role="tabpanel" aria-labelledby="add-event-tab">
+                        <h2 class="mt-4">เพิ่มกำหนดการ</h2>
+                        <hr>
+
+                        <form id="add-schedule-form">
+                            <div class="mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="station-type" class="form-label">ประเภทสถานี :</label>
+                                        <select class="form-select mb-3" id="station-type" name="station-type">
+                                            <option value="grp" selected>กลุ่ม</option>
+                                            <option value="node">เสากระจายเสียง</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="station-list" class="form-label">รายการสถานี :</label>
+                                        <select class="form-select mb-3" id="station-list" name="station-list">
+                                        </select>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="mb-3">
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="typesound" class="form-label">ประเภท :</label>
+                                        <select class="form-select mb-3" id="typesound" name="typesound">
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="listsound" class="form-label">รายการเสียง :</label>
+                                        <select class="form-select mb-3" id="listsound" name="listsound">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start-time" class="form-label">เวลาเริ่มต้น</label>
+                                    <input type="text" class="form-control" id="start-time" name="startTime" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="play-duration" class="form-label">ระยะเวลาที่ต้องการเล่น (หน่วยเป็นนาที)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="schedule-play-duration" name="playDuration" min="1" max="302400" value="5" required>
+                                        <button class="btn btn-secondary" type="button" id="schedule-play-duration-inc">+</button>
+                                        <button class="btn btn-secondary" type="button" id="schedule-play-duration-dec">-</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="repeat" class="form-label">การเล่นซ้ำ:</label>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="once" name="repeat" value="once" checked>
+                                    <label class="form-check-label" for="once">ครั้งเดียว</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="every-hour" name="repeat" value="everyHour">
+                                    <label class="form-check-label" for="every-hour">ทุกชั่วโมง</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="every-day" name="repeat" value="everyDay">
+                                    <label class="form-check-label" for="every-day">ทุกวัน</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="every-week" name="repeat" value="everyWeek">
+                                    <label class="form-check-label" for="every-week">ทุกสัปดาห์</label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">เพิ่มกำหนดการ</button>
+                            </div>
+                        </form>
+
+                        <hr>
+
+                        <h2 class="mt-4">รายการกำหนดการ</h2>
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ไอดี</th>
+                                    <th scope="col">ประเภท</th>
+                                    <th scope="col">รายการเสียง</th>
+                                    <th scope="col">เสากระจายเสียง</th>
+                                    <th scope="col">เวลาเริ่มต้น</th>
+                                    <th scope="col">ระยะเวลาที่ต้องการเล่น (นาที)</th>
+                                    <th scope="col">การเล่นซ้ำ</th>
+                                    <th scope="col">เเผงควบคุม</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="tab-pane fade" id="edit-event-form" role="tabpanel" aria-labelledby="edit-event-tab">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-xl-3">
+                                    <div class="card card-h-100" style="display:none;">
+                                        <div class="card-body">
+                                            <button class="btn btn-primary w-100" id="btn-new-event">
+                                                <i class="mdi mdi-plus"></i> สร้างกำหนดการใหม่
+                                            </button>
+                                            <div id="external-events" style="display:none;">
+                                                <br>
+                                                <p class="text-muted">ลากและวางเทมเพลตตัวอย่าง</p>
+                                                <div class="external-event fc-event bg-soft-success text-success" data-class="bg-soft-success">
+                                                    <i class="mdi mdi-checkbox-blank-circle font-size-11 me-2"></i> เล่นเสียงทุกวัน
+                                                </div>
+                                                <div class="external-event fc-event bg-soft-info text-info" data-class="bg-soft-info">
+                                                    <i class="mdi mdi-checkbox-blank-circle font-size-11 me-2"></i>เล่นเสียงเฉพาะวัน
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">เหตุการณ์ที่กำลังถึง</h5>
+                                        <p class="text-muted">เสียงจะถูกเล่นอัติโนมัติเมื่อกำหนดการมาถึง</p>
+                                        <div class="pe-2 me-n1 mb-3" data-simplebar style="height: 400px">
+                                            <div id="upcoming-event-list"></div>
+                                        </div>
+                                    </div>
+
+
+                                </div> <!-- end col-->
+
+                                <div class="col-xl-9">
+                                    <div class="card card-h-100">
+                                        <div class="card-body">
+                                            <div id="calendar"></div>
+                                        </div>
+                                    </div>
+                                </div><!-- end col -->
+                            </div><!--end row-->
+
+                            <div style='clear:both'></div>
+
+                            <!-- Add New Event MODAL -->
+                            <div class="modal fade" id="event-modal" tabindex="-1" style="display:none;">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0">
+                                        <div class="modal-header p-3 bg-soft-info">
+                                            <h5 class="modal-title" id="modal-title">Event</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <form class="needs-validation" name="event-form" id="form-event" novalidate>
+
+                                                <div class="row event-form">
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">ประเภท</label>
+                                                            <select class="form-select d-none" name="category" id="event-category" required>
+                                                                <option value="bg-soft-danger">เเดง</option>
+                                                                <option value="bg-soft-success">เขียว</option>
+                                                                <option value="bg-soft-primary">ฟ้า</option>
+                                                                <option value="bg-soft-info">ไฮไลท์</option>
+                                                                <option value="bg-soft-dark">ดำ</option>
+                                                                <option value="bg-soft-warning">เหลือง</option>
+                                                            </select>
+                                                            <div class="invalid-feedback">Please select a valid event category</div>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">ชื่อกำหนดการ</label>
+                                                            <input class="form-control d-none" placeholder="โปรดระบุชื่อกำหนดการ" type="text" name="title" id="event-title" required value="" />
+                                                            <div class="invalid-feedback">โปรดระบุชื่อกำหนดการ</div>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label>วันที่</label>
+                                                            <div class="input-group d-none">
+                                                                <input type="text" id="event-start-date" class="form-control flatpickr flatpickr-input" placeholder="โปรดระบุวันที่ต้องการเล่น" readonly required>
+                                                                <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
+                                                            </div>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <div class="col-12" id="event-time">
+                                                        <div class="row">
+                                                            <div class="col-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">เวลาเริ่ม</label>
+                                                                    <div class="input-group d-none">
+                                                                        <input id="timepicker1" type="text"
+                                                                               class="form-control flatpickr flatpickr-input" placeholder="โปรดระบุเวลาเริ่มต้น" readonly>
+                                                                        <span class="input-group-text"><i class="ri-time-line"></i></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">เวลาจบ</label>
+                                                                    <div class="input-group d-none">
+                                                                        <input id="timepicker2" type="text" class="form-control flatpickr flatpickr-input" placeholder="โปรดระบุเวลาจบ" readonly>
+                                                                        <span class="input-group-text"><i class="ri-time-line"></i></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label for="event-location">เสากระจายเสียง</label>
+                                                            <div>
+                                                                <input type="text" class="form-control d-none" name="event-location" id="event-location" placeholder="กลุ่ม หรือ เสากระจายเสียง">
+                                                            </div>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <input type="hidden" id="eventid" name="eventid" value="" />
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">รายละเอียด</label>
+                                                            <textarea class="form-control d-none" id="event-description" placeholder="รายละเอียดเพิ่มเติม" rows="3" spellcheck="false"></textarea>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                </div><!--end row-->
+                                                <div class="hstack gap-2 justify-content-end">
+                                                    <button type="button" class="btn btn-soft-danger" id="btn-delete-event"><i class="ri-close-line align-bottom"></i> ลบกำหนดการณ์</button>
+                                                    <button type="submit" class="btn btn-success" id="btn-save-event">เพิ่มกำหนดการณ์</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div> <!-- end modal-content-->
+                                </div> <!-- end modal dialog-->
+                            </div> <!-- end modal-->
+                            <!-- end modal-->
+                        </div>
+                        <div class="col-xl-12">
+                            <div class="card card-h-100">
+
+                                <div class="card-body">
+                                    <div id="calendar"></div>
+                                </div>
+
+                            </div>
+                        </div><!-- end col -->
+                    </div><!-- end row -->
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+        function showDateTimePicker() {
+            const now = new Date(); // current date and time
+            const minDate = new Date(now.getTime() + 60000); // minimum date and time, 1 minute from now
+            const defaultDate = new Date(now.getTime() + 60000); // default date and time, 1 minute from now
+
+            const fp = flatpickr("#start-time", {
+                enableTime: true,
+                dateFormat: "Y/m/d H:i",
+                defaultHour: defaultDate.getHours(),
+                defaultMinute: defaultDate.getMinutes(),
+                time_24hr: true,
+                minDate: minDate
+            });
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            sendMessagetoCore('stream', '', 'all', 'stop');
+            var stationTypeSelect = $("#station-type");
+            var stationListSelect = $("#station-list");
+           //  populate the station list select element with the initial data
+            showDateTimePicker();
+
+
+            $.ajax({
+                url: '/api/station/schedule/station',
+                method: 'GET',
+                success: function (data) {
+                    if (data.success) {
+                        var options = '';
+                        $.each(data.data, function (i, station) {
+                            options += '<option value="' + station.key + '" data-type="' + station.type + '">' + station.name + '</option>';
+                        });
+                        stationListSelect.html(options);
+                    } else {
+                        console.log('An error occurred: ' + data.message);
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log('An error occurred: ' + errorThrown);
+                }
+            });
+
+            // Bind the change event listener to the station type select element
+            stationTypeSelect.change(function () {
+                var selectedType = $(this).val();
+                $.ajax({
+                    url: '/api/station/schedule/station',
+                    method: 'GET',
+                    success: function (data) {
+                        if (data.success) {
+                            var options = '';
+                            $.each(data.data, function (i, station) {
+                                if (station.type === selectedType) {
+                                    options += '<option value="' + station.key + '">' + station.name + '</option>';
+                                }
+                            });
+                            stationListSelect.html(options);
+                        } else {
+                            console.log('An error occurred: ' + data.message);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log('An error occurred: ' + errorThrown);
+                    }
+                });
+            });
+
+            // Trigger the change event on the station type select element to load the station list select element with the appropriate options
+            stationTypeSelect.trigger('change');
+        });
+
+        function sendMessagetoCore(messagetype, message, target_uid, cmd) {
+
+            var data = {
+                user: "",
+                type_user: "multi",
+                cmd: cmd,
+                type: messagetype,
+                message: JSON.stringify(message),
+                target: target_uid,
+                target_multi: [target_uid]
+            };
+            return new Promise(function (resolve, reject) {
+                $.ajax({
+                    type: "POST",
+                    url: "/station/WebRTC",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        resolve(response);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    }
+                });
+            });
+        };
+    </script>
+    <script>
+        $(function () {
+            // Handle form submit event
+            $("#add-schedule-form").on("submit", function (event) {
+                event.preventDefault(); // Prevent form from submitting normally
+
+                const localDate = new Date($("#start-time").val()); // create a new Date object with the current local datetime
+
+                // get the local timezone offset in minutes and convert it to milliseconds
+                const offsetInMs = localDate.getTimezoneOffset() * 60 * 1000;
+
+                // create a new Date object with the local datetime adjusted by the timezone offset
+                const localDateAdjusted = new Date(localDate.getTime() - offsetInMs);
+
+                // convert the adjusted local datetime to an ISO string in local time
+                const localIsoString = localDateAdjusted.toISOString();
+
+                // Get form data as object
+                var formData = {
+                    type_station: $("#station-type").val(),
+                    key_station: $("#station-list").val(),
+                    type_play: $("#typesound").val(),
+                    id_play: $("#listsound").val(),
+                    schtime: localIsoString,
+                    duration: $("#schedule-play-duration").val(),
+                    repeat: $("input[name='repeat']:checked").val()
+                };
+                console.log(formData)
+
+                // Send form data as JSON to server
+                $.ajax({
+                    type: "POST",
+                    url: "/api/station/schedule",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        if (response.success) {
+                            // Show success alert
+                            Swal.fire({
+                                icon: "success",
+                                title: "สำเร็จ..",
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            });
+                        } else {
+                            // Show error alert
+                            Swal.fire({
+                                icon: "error",
+                                title: "เกิดข้อผิดพลาด...",
+                                text: response.message,
+                                timer: 3000,
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        // Show error alert
+                        Swal.fire({
+                            icon: "error",
+                            title: "เกิดข้อผิดพลาด...",
+                            text: error.responseText,
+                        });
+                    }
+                });
+            });
+
+
+            $("#schedule-table-body").on("click", "button.btn-danger", function () {
+                var scheduleId = $(this).data("schedule-id");
+
+                // Send DELETE request to API to delete schedule
+                $.ajax({
+                    url: "/schedule/del/" + scheduleId,
+                    type: "DELETE",
+                    success: function (response) {
+                        if (response.success) {
+                            // Remove schedule row from table
+                            $(this).closest("tr").remove();
+
+                            // Show success alert
+                            Swal.fire({
+                                icon: "success",
+                                title: "สำเร็จ..",
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            });
+                        } else {
+                            // Show error alert
+                            Swal.fire({
+                                icon: "error",
+                                title: "เกิดข้อผิดพลาด...",
+                                text: "Failed to delete schedule: " + response.message,
+                                timer: 3000,
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        // Show error alert
+                        Swal.fire({
+                            icon: "error",
+                            title: "เกิดข้อผิดพลาด...",
+                            text: "Failed to delete schedule: " + error,
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        $(function () {
+            // Function to fetch schedules from API and populate table
+            function fetchSchedules() {
+                $.get("/api/station/schedule", function (response) {
+                    if (response.success) {
+                        var schedules = response.data;
+
+                        // Populate table with schedules
+                        var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+                        var tableBody = $("#schedule-table-body");
+                        tableBody.empty();
+                        schedules.forEach(function (schedule) {
+                            var schtime = new Date(schedule.schedule.schtime);
+                            var row = $("<tr>");
+                            row.append($("<td>").text(schedule.schedule.key));
+                            row.append($("<td>").text(schedule.schedule.type_play));
+                            row.append($("<td>").addClass("link-primary").text(schedule.name_play));
+                            row.append($("<td>").addClass("link-primary").text(schedule.name_station));
+                            row.append($("<td>").text(schtime.toLocaleDateString('th-TH', options)));
+                            row.append($("<td>").text(schedule.schedule.duration));
+                            row.append($("<td>").text(getRepeatLabel(schedule.schedule)));
+                            row.append($("<td>").append($("<button>").text("Delete").addClass("btn btn-danger").data("schedule-id", schedule.schedule.key)));
+                            tableBody.append(row);
+                        });
+                    } else {
+                        // Show error alert
+                        Swal.fire({
+                            icon: "error",
+                            text: "Failed to fetch schedules: " + response.message
+                        });
+                    }
+                }).fail(function (xhr, status, error) {
+                    // Show error alert
+                    Swal.fire({
+                        icon: "error",
+                        text: "Failed to fetch schedules: " + error
+                    });
+                });
+            }
+
+            // Fetch schedules and populate table on page load
+            fetchSchedules();
+
+
+
+        });
+
+        function getRepeatLabel(schedule) {
+            if (schedule.once_time) {
+                return "ครั้งเดียว";
+            } else if (schedule.every_hour) {
+                return "ทุกชั่วโมง";
+            } else if (schedule.every_day) {
+                return "ทุกวัน";
+            } else if (schedule.every_week) {
+                return "ทุกสัปดาห์";
+            } else {
+                return "";
+            }
+        }
+    </script>
+
+
+    <script>
+
+
+        $(document).ready(function () {
+            // Load the typesound select element with the available options
+            $.ajax({
+                url: '/station/soundList',
+                method: 'GET',
+                success: function (data) {
+                    var options = '';
+                    var types = {};
+                    $.each(data.message, function (i, sound) {
+                        types[sound.type] = true;
+                    });
+                    for (var type in types) {
+                        options += '<option value="' + type + '">' + type.toUpperCase() + '</option>';
+                    }
+                    $('#typesound').html(options);
+
+                    // Trigger the change event on the typesound select element to load the listsound select element with the appropriate options
+                    $('#typesound').trigger('change');
+                }
+            });
+
+            // Bind the change event listener to the typesound select element
+            $('#typesound').change(function () {
+                var selectedType = $(this).val();
+                $.ajax({
+                    url: '/station/soundList',
+                    method: 'GET',
+                    success: function (data) {
+                        var options = '';
+                        $.each(data.message, function (i, sound) {
+                            if (sound.type === selectedType) {
+                                options += '<option value="' + sound.key + '">' + sound.name + '</option>';
+                            }
+                        });
+                        $('#listsound').html(options);
+                    }
+                });
+            });
+
+            // Add event listener to all checkboxes with the name 'repeat'
+            $('input[name=repeat]').change(function () {
+                // Uncheck all checkboxes except the one that was just clicked
+                switch(this.value) {
+                    case "once":
+                        $('#schedule-play-duration').attr('max', 302400);
+                        break;
+                    case "everyHour":
+                        $('#schedule-play-duration').attr('max', 60);
+                        if ($('#schedule-play-duration').val() > 60) {
+                            $('#schedule-play-duration').val(60);
+                        }
+                        break;
+                    case "everyDay":
+                        $('#schedule-play-duration').attr('max', 1440);
+                        if ($('#schedule-play-duration').val() > 1440) {
+                            $('#schedule-play-duration').val(24);
+                        }
+                        break;
+                    case "everyWeek":
+                        $('#schedule-play-duration').attr('max', 10080);
+                        if ($('#schedule-play-duration').val() > 10080) {
+                            $('#schedule-play-duration').val(168);
+                        }
+                        break;
+                    default:
+                        alert("default");
+                }
+                $('input[name=repeat]').not(this).prop('checked', false);
+            });
+
+            $(function () {
+                var min = parseInt($('#schedule-play-duration').attr('min'));
+                
+                var incrementTimer;
+                $('#schedule-play-duration-inc').mousedown(function () {
+                    var max = parseInt($('#schedule-play-duration').attr('max'));
+                    var val = parseInt($('#schedule-play-duration').val());
+                    if (val < max) {
+                        $('#schedule-play-duration').val(val + 1);
+                    }
+                    incrementTimer = setTimeout(function () {
+                        incrementTimer = setInterval(function () {
+                            val = parseInt($('#schedule-play-duration').val());
+                            if (val < max) {
+                                $('#schedule-play-duration').val(val + 1);
+                            }
+                        }, 100);
+                    }, 500);
+                });
+
+                var decrementTimer;
+                $('#schedule-play-duration-dec').mousedown(function () {
+                    var val = parseInt($('#schedule-play-duration').val());
+                    if (val > min) {
+                        $('#schedule-play-duration').val(val - 1);
+                    }
+                    decrementTimer = setTimeout(function () {
+                        decrementTimer = setInterval(function () {
+                            val = parseInt($('#schedule-play-duration').val());
+                            if (val > min) {
+                                $('#schedule-play-duration').val(val - 1);
+                            }
+                        }, 100);
+                    }, 500);
+                });
+
+                // Cancel any ongoing increment/decrement when the mouse is released
+                $(document).mouseup(function () {
+                    clearTimeout(incrementTimer);
+                    clearInterval(incrementTimer);
+                    clearTimeout(decrementTimer);
+                    clearInterval(decrementTimer);
+                });
+            });
+        });
+
+    </script>
+
+    <!-- list.js min js -->
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- multi.js -->
+    <script src="~/assets/libs/multi.js/multi.min.js"></script>
+    <!-- autocomplete js -->
+    <script src="~/assets/libs/AutoComplete/autocomplete.js/autoComplete.min.js"></script>
+    <!-- init js -->
+    <script src="~/assets/js/pages/form-advanced.init.js"></script>
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="~/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="~/assets/libs/flatpickr/flatpickr.min.js"></script>
+
+    <!-- calendar min js -->
+    <script src="~/assets/libs/fullcalendar/main.min.js"></script>
+
+    <!-- Calendar init -->
+    <script src="~/assets/js/pages/calendar.init.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+}

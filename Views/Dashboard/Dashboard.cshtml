@@ -1,0 +1,355 @@
+﻿@{
+    ViewBag.Title = "แดชบอร์ด";
+    ViewBag.pTitle = "แดชบอร์ด";
+    ViewBag.pageTitle = "แดชบอร์ด";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model Dictionary<string,string>
+
+@section styles{
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+}
+
+<div class="row">
+    <div class="col">
+
+        <div class="h-100">
+            <div class="row mb-0 pb-1">
+                <div class="col-12">
+                    <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+                        <div class="flex-grow-1">
+                            <!-- Primary Alert -->
+                            <div class="alert alert-primary alert-border-left alert-dismissible fade show" role="alert">
+                                <i class="ri-user-smile-line me-3 align-middle"></i> <strong>แจ้งเตือน</strong>
+                                @GlobalParameter.Config.Where(w=>w.key=="BANNER_NOTICE").FirstOrDefault().value
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div><!-- end card header -->
+                </div>
+                <!--end col-->
+            </div>
+            <!--end row-->
+
+            <div class="row">
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        เสากระจายเสียง ทั้งหมด
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="3">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("status","station")"
+                                       class="link-secondary text-decoration-underline">
+                                        สถานะสถานีกระจายเสียง
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class=" ri-stack-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        รายการกำหนดการทั้งหมด
+                                    </p>
+                                </div>
+
+                                <div class="flex-shrink-0">
+
+                                </div>
+
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="1">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("schedule","station")"
+                                       class="link-secondary text-decoration-underline">
+                                        รายการกำหนดการ
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class="ri-calendar-event-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-success text-truncate mb-0">
+                                        เสากระจายเสียง ออนไลน์
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary text-success mb-4">
+                                        <span class="counter-value" data-target="3">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("status","station")"
+                                       class="link-secondary text-decoration-underline">
+                                        สถานะสถานีกระจายเสียง
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-success rounded fs-3">
+                                        <i class="ri-base-station-fill text-success"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-danger text-truncate mb-0 ">
+                                        เสากระจายเสียง ออฟไลน์
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4 ">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value text-danger" data-target="0">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("status","station")" class="link-secondary text-decoration-underline">
+                                        สถานะสถานีกระจายเสียง
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-danger rounded fs-3">
+                                        <i class="  ri-base-station-line text-danger"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+            </div> <!-- end row-->
+
+
+        </div> <!-- end .h-100-->
+
+    </div> <!-- end col -->
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="h-100">
+            <div class="row">
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        จำนวนเสียงทั้งหมด
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="@Model.Where(w=>w.Key=="sound_cnt").FirstOrDefault().Value">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("Sound","Storage")"
+                                       class="link-secondary text-decoration-underline">
+                                        คลังจัดเก็บไฟล์เสียง
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class=" ri-sound-module-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        จำนวนเสียง TTS ทั้งหมด
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="1">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("tts","tools")"
+                                       class="link-secondary text-decoration-underline">
+                                        (TTS) Text to Speech
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class=" ri-wechat-2-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        จำนวนเสียง Youtube ทั้งหมด
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="@Model.Where(w=>w.Key=="yt_cnt").FirstOrDefault().Value">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("ytplayer","tools")"
+                                       class="link-secondary text-decoration-underline">
+                                        Youtube Player
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class=" ri-youtube-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-animate">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                        จำนวนสถานีวิทยุทั้งหมด
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-end justify-content-between mt-4">
+                                <div>
+                                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                        <span class="counter-value" data-target="@Model.Where(w=>w.Key=="fm_cnt").FirstOrDefault().Value">0</span>
+                                    </h4>
+                                    <a href="@Url.Action("fmplayer","tools")"
+                                       class="link-secondary text-decoration-underline">
+                                        FM Radio Player
+                                    </a>
+                                </div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary rounded fs-3">
+                                        <i class="ri-broadcast-line text-primary"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div><!-- end card body -->
+                    </div><!-- end card -->
+                </div><!-- end col -->
+
+
+            </div> <!-- end row-->
+
+
+        </div> <!-- end .h-100-->
+
+    </div> <!-- end col -->
+</div>
+@section scripts{
+<!-- apexcharts -->
+<script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+<!-- Vector map-->
+<script src="~/assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/world-merc.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/thailand.js"></script>
+
+<!-- apexcharts init -->
+<script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+
+<!--Swiper slider js-->
+<script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+<!-- echarts js -->
+<script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+<!-- echarts init -->
+<script src="~/assets/js/pages/echarts.init.js"></script>
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

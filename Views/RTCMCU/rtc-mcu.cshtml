@@ -1,0 +1,45 @@
+@{
+    ViewBag.Title = "rtc-mcu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model SJPCORE.Models.ConfigModel
+
+@section styles{
+    <!-- fullcalendar css -->
+    <!-- jsvectormap css -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Swiper slider css-->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    <!-- multi.js css -->
+    <link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+    <!-- autocomplete css -->
+    <link rel="stylesheet" href="~/assets/libs/@@tarekraafat/autocomplete.js/css/autoComplete.css" />
+}
+<div>
+    @Model.value
+    
+</div>
+
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+<script src="~/assets/libs/signalR/signalr.min.js"></script>
+<script src="~/assets/js/AgoraRTC_N-4.19.1.js"></script>
+
+<script>
+
+    let srconnection = null;
+    let options = {
+            appid: '0ab4caae9caf4ed89e5c8667f7b73f07',
+            channel: "@Model.value", // Site ID
+            uid: "@Model.value", // Site ID
+            token: null, 
+        };
+
+</script>
+
+<script src="~/assets/js/rtcmcu.js"></script>

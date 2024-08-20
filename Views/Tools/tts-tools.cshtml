@@ -1,0 +1,170 @@
+﻿@{
+    ViewBag.Title = "(TTS) Text to Speech";
+    ViewBag.pTitle = "(TTS) Text to Speech";
+    ViewBag.pageTitle = "(TTS) Text to Speech";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<!-- Plugins css -->
+<link href="~/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css" />
+
+<!-- dropzone css -->
+<link rel="stylesheet" href="~/assets/libs/dropzone/dropzone.css" type="text/css" />
+
+<!-- Filepond css -->
+<link href="~/assets/libs/filepond/filepond.min.js" rel="stylesheet" type="text/css" />
+<link href="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css" rel="stylesheet" type="text/css" />
+}
+
+
+<h2 class="text-center text-dark mt-3 mb-3">(TTS) TEXT TO SPEECH - แปลงข้อความเป็นเสียงพูด</h2>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                 เพิ่มข้อความ
+            </div>
+            <div class="card-body">
+                <div>
+                    <label for="exampleFormControlTextarea5" class="form-label fw-bold">
+                        ข้อความ
+                    </label>
+                    <textarea class="form-control mb-3" id="exampleFormControlTextarea5" rows="3"></textarea>
+                    <div class="row">
+                        <div class="col-6">
+                            <label for="exampleFormControlTextarea5" class="form-label fw-bold">
+                                ประเภทเสียง
+                            </label>
+                            <div class="d-grid gap-2">
+                                <!-- Select -->
+                                <div class="input-group">
+                                    <label class="input-group-text" for="inputGroupSelect01">ประเภทเสียง</label>
+                                    <select class="form-select" id="inputGroupSelect01">
+                                        <option selected value="1">ผู้ชาย</option>
+                                        <option value="2">ผู้หญิง</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">
+                                ความเร็ว
+                            </label>
+                            <div class="input-group">
+                                <label class="input-group-text" for="inputGroupSelect01">ความเร็ว</label>
+                                <select class="form-select" id="inputGroupSelect01">
+                                    <option value="1">x0.5</option>
+                                    <option value="2">x0.75</option>
+                                    <option selected value="2">x1</option>
+                                    <option value="2">x1.25</option>
+                                    <option value="2">x1.5</option>
+                                    <option value="2">x1.75</option>
+                                    <option value="2">x2</option>
+                                </select>
+                            </div>
+                         </div>
+                    </div>
+                    <!-- Buttons Grid -->
+                    <div class="d-grid gap-2 mt-3">
+                        <!-- Buttons with Label Right -->
+                        <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>เพิ่มข้อความ</button>
+                    </div>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                       จัดการข้อความ
+                    </div>
+                    <div class="col-6">
+                        @*<button type="button" class="btn btn-warning btn-sm btn-label waves-effect waves-light float-end" data-bs-toggle="modal" data-bs-target="#firstmodal"><i class="ri-file-upload-line label-icon align-middle fs-16 me-2"></i> อัพโหลด</button>*@
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:120px">แผงควบคุม</th>
+                                <th scope="col">ข้อความ</th>
+                                <th scope="col">ประเภทเสียง</th>
+                                <th scope="col">สร้างเมื่อ</th>
+                                <th scope="col">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary"><i class=" ri-play-circle-line label-icon align-middle fs-16 me-2"></i>ทดสอบเล่นเสียง</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"><i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2"></i>ลบไฟล์</button>
+                                </td>
+                                <td>ขณะนี้เวลา 8 นาฬิกา</td>
+                                <td>ผู้ชาย | ความเร็ว x1</td>
+                                <td>22 Jan, 2023</td>
+                                <td><span class="badge badge-soft-danger">ไม่ถูกใช้งาน</span></td>
+
+                            </tr>
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+   
+</div>
+
+
+@section scripts{
+<!-- apexcharts -->
+<script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+<!-- Vector map-->
+<script src="~/assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/world-merc.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/thailand.js"></script>
+
+<!-- filepond js -->
+<script src="~/assets/libs/filepond/filepond.min.js"></script>
+<script src="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+<script src="~/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
+<script src="~/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
+<script src="~/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+
+<script src="~/assets/js/pages/form-file-upload.init.js"></script>
+<!-- apexcharts init -->
+<script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+    <script src="~/assets/libs/dropzone/dropzone-min.js"></script>
+<!--Swiper slider js-->
+<script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+<!-- echarts js -->
+<script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+<!-- echarts init -->
+<script src="~/assets/js/pages/echarts.init.js"></script>
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

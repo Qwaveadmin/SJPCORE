@@ -1,0 +1,418 @@
+﻿@{
+    ViewBag.Title = "ระบบเเบ่งกลุ่ม";
+    ViewBag.pTitle = "ระบบเเบ่งกลุ่ม";
+    ViewBag.pageTitle = "ระบบเเบ่งกลุ่ม";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+
+
+<!-- multi.js css -->
+<link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+<!-- autocomplete css -->
+<link rel="stylesheet" href="~/assets/libs/@@tarekraafat/autocomplete.js/css/autoComplete.css">
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    <script>
+  $(document).ready(function() {
+    $('#volume_slider').on('input', function() {
+      $('#slider_value').text( $(this).val());
+    });
+  });
+</script>
+}
+
+@model _ManageGroupModel
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-4 fs-15">
+                        จัดการกลุ่ม [ @Model.name ]
+                    </div>
+                    <div class="col-8">
+                        <a class="btn btn-outline-secondary btn-sm btn-label waves-effect waves-light float-end me-2" id="go-back-button"><i class="ri-arrow-go-back-line label-icon align-middle fs-16 me-2"></i> ย้อนกลับ</a>
+                        <button type="button" class="btn @(Model.group_info.mute ? "btn-outline-success" : "btn-outline-danger")  btn-sm btn-label waves-effect waves-light float-end me-2" onclick="MuteGroup(@Convert.ToInt16(Model.group_info.mute), '@Model.key');" grp-key="@Model.key" ><i class="  @(Model.group_info.mute ? " ri-volume-up-line" : "ri-volume-mute-line") label-icon align-middle fs-16 me-2"></i> @(Model.group_info.mute ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด")</button>
+                        
+                        <div class="row align-items-center">
+                            <div class="col-7">
+                                <input type="range" class="form-range" min="0" max="100" id="volume_slider" value="@Model.group_info.vol">
+                                <input type="hidden" id="key-station" value="@Model.key">
+                            </div>
+                            <div class="col-2">
+                                <span>ระดับเสียง :</span> <span id="slider_value">@Model.group_info.vol</span>
+                            </div>
+                            <div class="col-3">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-sm btn-label waves-effect right waves-light " id="save-volume"><i class="ri-speaker-line label-icon align-middle fs-16 ms-2"></i>ปรับระดับเสียง</button>
+                                </div>
+                            </div>
+                        </div>
+             
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+
+                                <th scope="col" style="width:100px;">ไอดี</th>
+                                <th scope="col">ชื่อเสา</th>
+                                <th scope="col">สถานะ</th>
+                                <th scope="col" style="width:300px;">เสียง</th>
+                                <th scope="col" style="width:150px;">แผงควบคุม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach(var node in Model.nodes)
+                            {
+                                <tr>
+
+                                    <td><a href="#" class="fw-semibold link-danger key-station" id="@node.key">@node.key</a></td>
+                                    <td>@node.name</td>
+                                    <td id="status-@node.key" class="station-status">ออฟไลน์</td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-sm custom-toggle @(Model.station_info.Where(w=>w.key==node.key).FirstOrDefault().mute ? "" : "active")" onclick="MuteStation(@Convert.ToInt16(Model.station_info.Where(w=>w.key==node.key).FirstOrDefault().mute), '@node.key');" data-bs-toggle="button" id="mute-button">
+                                                    <span class="icon-on"><i class="ri-volume-mute-line ri-xl text-danger align-bottom"></i></span>
+                                                    <span class="icon-off"><i class="ri-volume-up-line ri-xl text-success align-bottom"></i></span>
+                                                </button>
+                                            </div>
+
+                                            <div class="col-10">
+                                                <label class="input-group-text" for="inputGroupSelect01">ระดับเสียง @Model.station_info.Where(w=>w.key==node.key).FirstOrDefault().vol เปอร์เซ็น</label>
+                                            </div>
+
+                                        </div>
+
+
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("info","station")?id=@node.key"><i class="  ri-eye-line label-icon align-middle fs-16 me-2"></i>ดูข้อมูล</a>
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("settings","station")?id=@node.key"><i class="  ri-settings-4-line label-icon align-middle fs-16 me-2"></i>ตั้งค่า</a>
+                                    </td>
+                                </tr>
+                            }
+                           
+                           
+
+                        </tbody>
+                    </table>                    
+                </div>                
+            </div>            
+        </div><!-- end card -->
+            <div class="row">
+                <div class="col-sm-6">
+                    <button type="button" class="btn btn-sm btn-danger" id="Grp-stopmedia-btn"><i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2 "></i>ยกเลิกการเล่นเสียงทั้งหมด</button>
+                </div>
+            </div>
+    </div><!-- end col -->
+
+   
+</div>
+
+<!-- Varying modal content -->
+<div class="modal fade" id="varyingcontentModal" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">แก้ไขกลุ่ม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <form>
+                    <div class="mb-1">
+                        <label for="recipient-name" class="col-form-label">ชื่อกลุ่ม :</label>
+                        <input type="text" class="form-control" id="recipient-name">
+                    </div>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 mt-2 border-bottom"></div>
+                    <div class="mb-3">
+                        <form>
+                            <select multiple="multiple"
+                                    name="favorite_cars"
+                                    id="multiselect-optiongroup">
+                                <optgroup label="สถานีกระจายเสียง">
+                                    @foreach (var item in SJPCORE.Util.StationHelper.getStation())
+                                    {
+                                        <option value="@item.Key">@item.Value</option>
+                                    }
+                                </optgroup>
+                            </select>
+                        </form>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary">สร้างกลุ่ม</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+    <script>
+        $(document).ready(function () {
+            $('#go-back-button').click(function (event) {
+                event.preventDefault(); // stop the link from being followed
+                goBack(); // custom function to go back
+            });
+        });
+
+        function goBack() {
+            // custom function to go back
+            history.back();
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            updateStationLinks();
+        });
+        function updateStationLinks() {
+            $.ajax({
+                url: "/station/online",
+                type: "GET",
+                success: function (response) {
+                    var onlineCount = 0;
+                    var offlineCount = 0;
+
+                    // loop through each station link and update its class based on whether it is online or not
+                    $('.key-station').each(function () {
+                        var stationId = $(this).attr('id');
+                        var isOnline = false;
+
+                        for (var i = 0; i < response.message.length; i++) {
+                            if (response.message[i].id === stationId) {
+                                isOnline = true;
+                                $('#status-' + stationId).text(response.message[i].status);
+                                break;
+                            }
+                        }
+
+                        if (isOnline) {
+                            $(this).removeClass('link-danger').addClass('link-success');
+                            onlineCount++;
+                        } else {
+                            $(this).removeClass('link-success').addClass('link-danger');
+                            offlineCount++;
+                        }
+                    });
+
+                    // update the online and offline station count in the HTML
+                    $('#station-cnt-online').text(onlineCount);
+                    $('#station-cnt-online').attr('data-target', onlineCount);
+                    $('#station-cnt-offline').text(offlineCount);
+                    $('#station-cnt-offline').attr('data-target', offlineCount);
+                },
+                error: function () {
+                    console.log("Error retrieving station online status");
+                }
+            });
+        }
+
+        setInterval(updateStationLinks, 5000);
+    </script>
+    
+    <script>
+
+        function MuteStation(statusMute, keyStation) {
+
+            var mute_status = Boolean(statusMute);
+            var mute_message = mute_status ? 'เปิดเสียง' : 'ปิดเสียง';
+
+            const data = {
+                key: keyStation,
+                type_user: 'user',
+                mute: !mute_status
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/station/mute',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: `${mute_message} ${keyStation} สำเร็จ`,
+                            timer: 3000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: errorThrown,
+                    });
+                }
+            });
+        }
+
+        function MuteGroup(statusMute, keyGroup) {
+
+            var mute_status = Boolean(statusMute);
+            var mute_message = mute_status ? 'เปิดเสียง' : 'ปิดเสียง';
+
+            const data = {
+                key: keyGroup,
+                type_user: 'group',
+                mute: !mute_status
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/station/mute',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: `${mute_message} ${keyGroup} สำเร็จ`,
+                            timer: 3000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: errorThrown,
+                    });
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $('#save-volume').click(function () {
+            var volume = $('#volume_slider').val();
+            var type_user = 'group';
+            var key = '@Model.key';
+            var data = { vol: volume, type_user: type_user, key: key };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/vol",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+        document.getElementById('Grp-stopmedia-btn').addEventListener('click', function () {
+            var type_user = 'group';
+            var key = '@Model.key';
+            var data = {type: 'media', type_user: type_user, key: key };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/stop",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        });
+
+
+    </script>
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <!-- list.js min js -->
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- multi.js -->
+    <script src="~/assets/libs/multi.js/multi.min.js"></script>
+    <!-- autocomplete js -->
+    <script src="~/assets/libs/AutoComplete/autocomplete.js/autoComplete.min.js"></script>
+    <!-- init js -->
+  
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

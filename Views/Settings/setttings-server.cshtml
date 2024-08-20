@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "ตั้งค่า";
+    ViewBag.pTitle = "ตั้งค่า";
+    ViewBag.pageTitle = "ตั้งค่า";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model Tuple<ConfigModel>
+
+@section styles{
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+    <!-- Sweet Alert css-->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+}
+
+<div class="col-xxl-12">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3" style="border-right: 3px solid #F2F7F9;">
+                    <div class="nav flex-column nav-pills text-center " id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">เว็บไซต์</a>
+                        <a class="nav-link mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false" tabindex="-1">MQTT BROKER</a>
+                        @*<a class="nav-link mb-2" id="v-pills-rtsp-tab" data-bs-toggle="pill" href="#v-pills-rtsp" role="tab" aria-controls="v-pills-rtsp" aria-selected="false" tabindex="-1">RTSP SERVER</a>*@
+                    </div>
+                </div><!-- end col -->
+                <div class="col-md-9">
+                    <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                        <div class="tab-pane fade active show" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+                            
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่าเว็บไซต์</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าเว็บไซต์ได้ที่หน้านี้</label>                            
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ชื่อเว็บไซต์</strong></label>
+                                <input type="text" class="form-control" id="STATION_NAME" placeholder="ชื่อเว็บไซต์" value="@GlobalParameter.Config.Where(w=>w.key=="STATION_NAME").FirstOrDefault().value">
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>คำจำกัดความ</strong></label>
+                                <input type="text" class="form-control" id="BANNER_NOTICE" placeholder="คำจำกัดความ" value="@GlobalParameter.Config.Where(w=>w.key=="BANNER_NOTICE").FirstOrDefault().value">
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ส่วนท้าย</strong></label>
+                                <input type="text" class="form-control" id="FOOTER" placeholder="ส่วนท้าย" value="@GlobalParameter.Config.Where(w=>w.key=="FOOTER").FirstOrDefault().value">
+                            </div>
+                           
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class="  ri-image-line text-muted me-1"></i><strong>ไอคอนเล็ก</strong></label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="inputGroupFile02" disabled>
+                                    <label class="input-group-text" for="inputGroupFile02">อัพโหลด</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class="  ri-image-line text-muted me-1"></i><strong>ไอคอนใหญ่</strong></label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="inputGroupFile02" disabled>
+                                    <label class="input-group-text" for="inputGroupFile02">อัพโหลด</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class="  ri-image-line text-muted me-1"></i><strong>ไอคอนเเถบบน</strong></label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="inputGroupFile02" disabled>
+                                <label class="input-group-text" for="inputGroupFile02">อัพโหลด</label>
+                                </div>
+                            </div>
+
+                            <!-- Buttons with Label Right -->
+                            <button type="submit" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="save"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล</button>
+
+                        </div>
+                        <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+
+
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่า MQTT BROKER</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่า MQTT BROKER ได้ที่หน้านี้</label>
+                            <div class="text-center text-dark mt-3 mb-3 fs-25">สถานะการทำงานปัจจุบัน [ @SJPCORE.Util.NetworkHelper.GetLocalIPv4() ]</div>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ชื่อผู้ใช้งาน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="ชื่อผู้ใช้งาน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_USER").FirstOrDefault().value">
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-lock-password-line text-muted me-1"></i><strong>รหัสผ่าน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="รหัสผ่าน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_PASS").FirstOrDefault().value">
+                            </div>
+                            
+
+                            <!-- Buttons with Label Right -->
+                            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล</button>
+
+
+                        </div>
+
+                        <div class="tab-pane fade" id="v-pills-rtsp" role="tabpanel" aria-labelledby="v-pills-rtsp-tab">
+
+
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่า RTSP SERVER</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่า RTSP SERVER ได้ที่หน้านี้</label>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ชื่อผู้ใช้งาน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="ชื่อผู้ใช้งาน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_PASS").FirstOrDefault().value">
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-lock-password-line text-muted me-1"></i><strong>รหัสผ่าน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="รหัสผ่าน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_PASS").FirstOrDefault().value">
+                            </div>
+
+
+                            <!-- Buttons with Label Right -->
+                            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล</button>
+
+
+                        </div>
+
+                    </div>
+                </div><!--  end col -->
+            </div>
+            <!--end row-->
+        </div><!-- end card-body -->
+    </div><!-- end card -->
+</div>
+
+@section scripts{
+
+    <script>
+        $(document).ready(function () {
+            $('#save').click(function (e) {
+                e.preventDefault(); // prevent the form from submitting the default way
+
+                var formData = {
+                    STATION_NAME: $('#STATION_NAME').val(),
+                    FOOTER: $('#FOOTER').val(),
+                    BANNER_NOTICE: $('#BANNER_NOTICE').val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/settings/website",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload()
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Sweet Alerts js -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

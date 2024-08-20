@@ -1,0 +1,634 @@
+﻿@{
+    ViewBag.Title = "ระบบเเบ่งกลุ่ม";
+    ViewBag.pTitle = "ระบบเเบ่งกลุ่ม";
+    ViewBag.pageTitle = "ระบบเเบ่งกลุ่ม";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+
+<!-- multi.js css -->
+<link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+<link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+}
+
+@model List<SJPCORE.Models._GroupModel>
+
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card crm-widget">
+            <div class="card-body p-0">
+
+                <div class="row row-cols-md-3 row-cols-1">
+
+                    <div class="col col-lg border-end">
+                        <div class="py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนกลุ่มทั้งหมด
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-team-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="@SJPCORE.Util.GroupHelper.getGroup().Count">0</span> กลุ่ม</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนกลุ่มที่ถูกใช้งาน 
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-user-follow-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="1">0</span> กลุ่ม</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนกลุ่มที่ไม่ถูกใช้งาน 
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-user-unfollow-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="0">0</span> กลุ่ม</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                   
+                </div><!-- end row -->
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                       จัดการกลุ่ม
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn btn-warning btn-sm btn-label waves-effect waves-light float-end" data-bs-toggle="modal" data-bs-target="#varyingcontentModal" data-bs-whatever="@Model"><i class=" ri-group-2-line label-icon align-middle fs-16 me-2"></i> สร้างกลุ่ม</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:100px;">ไอดี</th>
+                                <th scope="col">ชื่อกลุ่ม</th>
+                                <th scope="col" style="width:150px;">จำนวนสมาชิก</th>
+                                <th scope="col" style="width:100px;">สถานะ</th>
+                                <th scope="col" style="width:200px;">เสียง</th>
+                                <th scope="col" style="width:200px;">แผงควบคุม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach(var item in Model)
+                            {
+                                <tr>
+
+                                    <td><a href="#" class="fw-semibold">#@item.key</a></td>
+                                    <td>@item.name</td>
+                                    <td>@item.nodes.Length เสา</td>
+
+                                    <td><span class="badge badge-soft-success">ถูกใช้งาน</span></td>
+
+                                    <td>
+                                       
+                                        <button type="button" class="btn btn-sm custom-toggle @(item.group_info.mute ? "" : "active")" grp-key="@item.key" onclick="MuteGroup(@Convert.ToInt16(item.group_info.mute), '@item.key');" data-bs-toggle="button" id="mute-button">
+                                            <span class="icon-on"><i class="ri-volume-mute-line ri-xl text-danger align-bottom"></i></span>
+                                            <span class="icon-off"><i class="ri-volume-up-line ri-xl text-success align-bottom"></i></span>
+                                        </button>
+                                        <input type="range" class="volume align-middle" min="0" max="100" id="volume_slider-@item.key" value="@item.vol" key-grp="@item.key" onchange="changevol(this)">
+
+                                    </td>
+                                    
+                                    <td>
+
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#varyingcontentModal2" grp="@item.name" key-grp="@item.key" onclick="openModal(this)"> <i class=" ri-play-circle-line label-icon align-middle fs-16 me-2"></i>เล่นเสียง</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" grp="@item.name" key-grp="@item.key" onclick="stopMedia(this)"> <i class=" ri-stop-circle-line label-icon align-middle fs-16 me-2"></i>หยุดเสียง</button>
+                                        <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("groupinfo","station")?id=@item.key"><i class="ri-eye-line label-icon align-middle fs-16 me-2"></i>ดูข้อมูล</a>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteGrp('@item.key')"><i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2 "></i>ลบกลุ่ม</button>
+
+                                    </td>
+                                </tr>
+                            }
+                            
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+   
+</div>
+
+<!-- Varying modal content -->
+<div class="modal fade" id="varyingcontentModal2" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">เครื่องเล่นเสียง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                    <div class="mb-1">
+                        <label for="recipient-name" class="col-form-label">ชื่อกลุ่ม :</label>
+                    <input type="text" class="form-control" id="grp-name-modal" readonly>
+                    <input type="hidden" class="form-control" id="grp-key-modal">
+                    </div>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 mt-2 border-bottom"></div>
+                    <div class="mb-3">
+                       <div class="row">
+                        <div class="col-6">
+                            <label for="recipient-name" class="col-form-label">ประเภท :</label>
+                            <select class="form-select mb-3" id="typesound">
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="recipient-name" class="col-form-label">รายการเสียง :</label>
+                            <select class="form-select mb-3" id="listsound">
+                            </select>
+                        </div>
+                       </div>
+                    </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary" id="btnplaynow">เล่นเสียงเดี๋ยวนี้</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Varying modal content -->
+<div class="modal fade" id="varyingcontentModal" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">สร้างกลุ่ม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <form>
+                    <div class="mb-1">
+                        <label for="recipient-name" class="col-form-label">ชื่อกลุ่ม :</label>
+                        <input type="text" class="form-control" id="grp-name">
+                    </div>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 mt-2 border-bottom"></div>
+                    <div class="mb-3">
+                        <form>
+                            <select multiple="multiple"
+                                    name="favorite_cars"
+                                    id="multiselect-optiongroup">
+                                <optgroup label="สถานีกระจายเสียง">
+
+                                    @foreach (var item in SJPCORE.Util.StationHelper.getStation())
+                                    {
+                                        <option value="@item.Key">@item.Value</option>
+                                    }
+
+                                </optgroup>
+                            </select>
+                        </form>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary" id="create_grp">สร้างกลุ่ม</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        document.getElementById("btnplaynow").addEventListener("click", function () {
+            
+            
+            const listsound = document.getElementById("listsound");
+            const typesound = document.getElementById("typesound");
+            const key = document.getElementById("grp-key-modal");
+            const selectedValue_listsound = listsound.options[listsound.selectedIndex].value;
+            const selectedValue_typesound = typesound.options[typesound.selectedIndex].value;
+            
+             var data = {
+                      key: key.value,
+                type_user: 'group',
+                type_play: selectedValue_typesound,
+                key_sound: selectedValue_listsound
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/Station/Mqtt",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ..',
+                        text: response.message,
+                        timer: 3000,
+                        onClose: () => location.reload()
+                    }).then(() => {
+                        location.reload()
+                    })
+                    },
+                    error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: xhr.responseText,
+                    })
+                    }
+                });
+        });
+    </script>
+
+    <script>
+            $(document).ready(function () {
+                sendMessagetoCore('stream', '', 'all', 'stop');
+                // Load the typesound select element with the available options
+                $.ajax({
+                    url: '/station/soundList',
+                    method: 'GET',
+                    success: function (data) {
+                        var options = '';
+                        var types = {};
+                        $.each(data.message, function (i, sound) {
+                            types[sound.type] = true;
+                        });
+                        for (var type in types) {
+                            options += '<option value="' + type + '">' + type.toUpperCase() + '</option>';
+                        }
+                        $('#typesound').html(options);
+
+                        // Trigger the change event on the typesound select element to load the listsound select element with the appropriate options
+                        $('#typesound').trigger('change');
+                    }
+                });
+
+                // Bind the change event listener to the typesound select element
+                $('#typesound').change(function () {
+                    var selectedType = $(this).val();
+                    $.ajax({
+                        url: '/station/soundList',
+                        method: 'GET',
+                        success: function (data) {
+                            var options = '';
+                            $.each(data.message, function (i, sound) {
+                                if (sound.type === selectedType) {
+                                    options += '<option value="' + sound.key + '">' + sound.name + '</option>';
+                                }
+                            });
+                            $('#listsound').html(options);
+                        }
+                    });
+                });
+            });
+
+            function sendMessagetoCore(messagetype, message, target_uid, cmd) {
+
+                var data = {
+                    user: "",
+                    type_user: "multi",
+                    cmd: cmd,
+                    type: messagetype,
+                    message: JSON.stringify(message),
+                    target: target_uid,
+                    target_multi: [target_uid]
+                };
+                return new Promise(function (resolve, reject) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/station/WebRTC",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(data),
+                        success: function (response) {
+                            resolve(response);
+                        },
+                        error: function (error) {
+                            reject(error);
+                        }
+                    });
+                });
+            };
+    </script>
+
+    <script>
+
+        function MuteGroup(statusMute, keyGroup) {
+
+            var mute_status = Boolean(statusMute);
+            var mute_message = mute_status ? 'เปิดเสียง' : 'ปิดเสียง';
+
+            const data = {
+                key: keyGroup,
+                type_user: 'group',
+                mute: !mute_status
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/station/mute',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: `${mute_message} ${keyGroup} สำเร็จ`,
+                            timer: 3000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: errorThrown,
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        document.getElementById("create_grp").addEventListener("click", function () {
+
+            const selectElement = document.getElementById("multiselect-optiongroup");
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
+            const grpname = document.getElementById("grp-name").value;
+
+            // Validate input
+            const errors = [];
+            if (!grpname) {
+                errors.push("กรุณากรอกชื่อกลุ่ม");
+            }
+            if (selectedOptions.length === 0) {
+                errors.push("กรุณาเลือกสถานีกระจายเสียง");
+            }
+            if (errors.length > 0) {
+                const errorHtml = errors.map(error => `<li>${error}</li>`).join("");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    html: `กรุณาแก้ไขข้อผิดพลาดต่อไปนี้<ul>${errorHtml}</ul>`,
+                });
+                return; // Stop the function if there are errors
+            }
+
+            var data = {
+                name: grpname,
+                nodes: selectedOptions,
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/group/create",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if(response.success){
+                        Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ..',
+                        text: response.message,
+                        timer: 3000,
+                        onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload()
+                        })
+                    }else{
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        })
+                    }
+                    
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    })
+                }
+            });
+        });
+
+        function deleteGrp(id) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: 'คุณแน่ใจ?',
+                text: "หากลบ กลุ่มจะหายเเละไม่สามารถใช้งานอีกได้!!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ตกลง, ลบมัน!',
+                cancelButtonText: 'ไม่, ยกเลิก!',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "DELETE",
+                        url: "/station/group/del?id=" + id,
+                        success: function (data) {
+                            if (data.success) {
+                                swalWithBootstrapButtons.fire({
+                                    icon: 'success',
+                                    title: 'ลบสำเร็จ',
+                                    text: data.message,
+                                    timer: 3000,
+                                    onClose: () => location.reload()
+                                }).then(() => {
+                                    location.reload()
+                                })
+
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                )
+                            }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            swalWithBootstrapButtons.fire(
+                                'Error!',
+                                xhr.status + ' ' + thrownError,
+                                'error'
+                            )
+                        }
+                    });
+                } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    swalWithBootstrapButtons.fire(
+                        'ยกเลิกสำเร็จ',
+                        'กลุ่ม ยังคงอยู่ :)',
+                        'error'
+                    )
+                }
+            })
+        }
+    </script>
+    
+    <script>
+        function openModal(btn) {
+            var modalname = document.getElementById("grp-name-modal");
+            var modalkey = document.getElementById("grp-key-modal");
+            modalname.value = btn.attributes["grp"].value;
+            modalkey.value = btn.attributes["key-grp"].value;
+        }
+        function stopMedia(btn) {
+            var type_user = 'group';
+            var key = btn.attributes["key-grp"].value;
+            var data = {type: 'media', type_user: type_user, key: key };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/stop",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        }
+
+        function changevol (bar) {
+            
+            var data = { 
+                vol: bar.value,
+                type_user: 'group', 
+                key: bar.attributes["key-grp"].value 
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/vol",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        }
+        
+    </script>
+    
+    <!-- list.js min js -->
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- multi.js -->
+    <script src="~/assets/libs/multi.js/multi.min.js"></script>
+
+    <!-- init js -->
+    <script src="~/assets/js/pages/form-advanced.init.js"></script>
+
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

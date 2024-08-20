@@ -1,0 +1,39 @@
+﻿<!doctype html>
+
+<html lang="en" data-layout="vertical" data-topbar="@SJPCORE.Util.HTMLHelper.IsDarkMode()" data-sidebar="@SJPCORE.Util.HTMLHelper.IsDarkMode()" data-sidebar-size="lg" data-sidebar-image="none"
+      data-preloader="enable" data-layout-mode="@SJPCORE.Util.HTMLHelper.IsDarkMode()" data-layout-width="fluid" data-layout-position="fixed" data-layout-style="detached">
+<head>
+    @Html.Partial("~/Views/Shared/_title_meta.cshtml")
+    @RenderSection("styles", required: false)
+    @Html.Partial("~/Views/Shared/_head_css.cshtml")
+</head>
+<body>
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+        @Html.Partial("~/Views/Shared/_menu.cshtml")
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="main-content">
+
+            <div class="page-content">
+                <div class="container-fluid">
+                    @Html.Partial("~/Views/Shared/_page_title.cshtml")
+
+                    @RenderBody()
+                </div>
+            </div>
+            @Html.Partial("~/Views/Shared/_footer.cshtml")
+        </div>
+
+    </div>
+    <!-- END layout-wrapper -->
+    @Html.Partial("~/Views/Shared/_customizer.cshtml")
+    @Html.Partial("~/Views/Shared/_terminal.cshtml")
+    
+    @Html.Partial("~/Views/Shared/_vendor_scripts.cshtml")
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+<script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>

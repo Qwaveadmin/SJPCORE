@@ -1,0 +1,253 @@
+﻿@using Microsoft.JSInterop;
+
+@{
+    ViewBag.Title = "กระจายเสียงเรียลไทม์";
+    ViewBag.pTitle = "กระจายเสียงเรียลไทม์";
+    ViewBag.pageTitle = "กระจายเสียงเรียลไทม์";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section styles{
+    <!-- jsvectormap css -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Swiper slider css-->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- multi.js css -->
+    <link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+    <!-- autocomplete css -->
+    <link rel="stylesheet" href="~/assets/libs/@@tarekraafat/autocomplete.js/css/autoComplete.css">
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+}
+
+@model IEnumerable<StationModel>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card crm-widget">
+            <div class="card-body p-0">
+                <div class="row row-cols-md-3 row-cols-1">
+                    <div class="col col-lg border-end">
+                        <div class="py-4 px-3">
+                            <h5 class="text-primary text-uppercase fs-13">
+                                สถานีที่กำลังรับถ่ายทอด
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-base-station-line  display-6 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3 ">
+                                    <h2 id="number-of-node" class="mb-0 text-primary"><span class="counter-value" data-target="">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class=" text-uppercase text-success fs-13">
+                                จำนวนเสาที่ออนไลน์
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-base-station-line display-6 text-success"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0  text-success"><span class="counter-value" id="station-cnt-online" data-target="0">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class=" text-uppercase text-danger fs-13">
+                                จำนวนเสาที่ออฟไลน์
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-base-station-line display-6 text-danger"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0 text-danger"><span class="counter-value" id="station-cnt-offline" data-target="0">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div><!-- end row -->
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row d-flex align-items-center">
+                    <div class="col d-flex align-items-center">
+                        <i id="voice-icon" class="mx-3 align-bottom ri-mic-off-fill" style="font-size: 2em;"></i>
+                        <button data-bs-toggle="button" id="buttonMic" class="ms-3 me-1 btn btn-secondary btn-sm custom-toggle" style="height: 40px;" type="button" aria-pressed="false">
+                            <span class="icon-on"><i class="ri-mic-line align-bottom me-1"></i> เปิดไมโครโฟน</span>
+                            <span class="icon-off"><i class="ri-mic-off-line align-bottom me-1"></i> ปิดไมโครโฟน</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm custom-toggle" style="height: 40px;" id="playback-btn" data-bs-toggle="button" aria-pressed="true">
+                            <span class="icon-on"><i class="ri-play-fill align-bottom"></i> ฟังเสียงไมค์</span>
+                            <span class="icon-off"><i class="ri-stop-fill text-danger align-bottom"></i> หยุดเล่นเสียงไมค์</span>
+                        </button>
+                    </div>
+                    <!--end col-->
+                    <div class="col">
+                        <div class="list-grid-nav hstack gap-1">
+                            <div class="input-group">
+                                <input type="text" id="search-box" class="form-control" placeholder="ค้นหาชื่อเสา" onkeyup="filterTable(event)">
+                                <button type="button" class="btn btn-warning btn-sm btn-label waves-effect waves-light float-end" data-bs-toggle="modal" data-bs-target="#openbroardcastModal" data-bs-whatever=""><i class=" ri-add-line label-icon align-middle fs-16 me-2"></i> เพิ่มเสากระจายเสียง</button>
+                            </div>
+
+                            <audio id="playback"></audio>
+                            <button type="button" id="grid-view-button" class="btn btn-soft-info nav-link btn-icon fs-14 filter-button active" style="width: 50px;"><i class="ri-grid-fill"></i></button>
+                            <button type="button" id="list-view-button" class="btn btn-soft-info nav-link btn-icon fs-14 filter-button" style="width: 50px;"><i class="ri-list-unordered"></i></button>
+                            <button type="button" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="false" class="btn btn-soft-info btn-icon fs-14" style="width: 50px;"><i class="ri-more-2-fill"></i></button>
+
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink1" style="">
+                                <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#broardcastModal" onclick="openmodal(this)" modal-type="mute_all">ปิดเสียงทั้งหมด</a></li>
+                                <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#broardcastModal" onclick="openmodal(this)" modal-type="open_all">เปิดระบบกระจายเสียงทั้งหมด</a></li>
+                                <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#broardcastModal" onclick="openmodal(this)" modal-type="close_all">ปิดระบบกระจายเสียงทั้งหมด</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!--end col-->
+                </div>
+                <!--end row-->
+            </div>
+            <!--end card header-->
+            <div class="card-body p-2">
+
+                <div class="col-lg-12">
+
+                    <div id="teamlist">
+                        <div class="team-list row grid-view-filter" id="team-member-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade zoomIn" id="broardcastModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">ยืนยันการปิดการประกาศเสียง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-content">คุณแน่ใจหรือไม่ว่าต้องการปิดการประกาศเสียงทั้งหมด?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-danger" id="modal-confirm-btn" data-bs-dismiss="modal" onclick="">ปิดระบบกระจายเสียงทั้งหมด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="openbroardcastModal" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">เลือกกลุ่ม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <select multiple="multiple" class="h-100"
+                            name="favorite_cars"
+                            id="multiselect-optiongroup">
+                        <optgroup label="กลุ่ม">
+                            @foreach (var item in SJPCORE.Util.GroupHelper.getGroupNode())
+                            {
+                                <option id="option-@item.Key" value="@item.Key" data-type="group" data-nodes="@string.Join(",", item.Value.nodes)">@item.Value.name</option>
+                            }
+                        </optgroup>
+                        <optgroup label="สถานีกระจายเสียง">
+                            @foreach (var item in SJPCORE.Util.StationHelper.getStation())
+                            {
+                                <option id="option-@item.Key" value="@item.Key" data-type="node" data-nodes="@item.Key">@item.Value</option>
+                            }
+                        </optgroup>
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="closebroardcastModal" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary" id="btn-on-broadcast" onclick="openbroadcast(false)">
+                    <span class="icon-on"><i class="ri-volume-up-fill align-bottom me-1"></i> เปิดระบบกระจายเสียง</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+    <script>
+        const Model = @Html.Raw(Json.Serialize(Model));
+        let IsOnline;
+        $(document).ready(function () {
+            updateStationLinks();
+        });
+        function updateStationLinks() {
+            $.ajax({
+                url: "/station/online",
+                type: "GET",
+                success: function (response) {
+                    IsOnline = response.message;
+                    var onlineCount = response.message.length;
+                    var offlineCount = '@(Model.Count())' - onlineCount;
+                    // update the online and offline station count in the HTML
+                    $('#station-cnt-online').text(onlineCount);
+                    $('#station-cnt-online').attr('data-target', onlineCount);
+                    $('#station-cnt-offline').text(offlineCount);
+                    $('#station-cnt-offline').attr('data-target', offlineCount);
+                },
+                error: function () {
+                    console.log("Error retrieving station online status");
+                }
+            });
+        }
+
+        setInterval(updateStationLinks, 3000);
+    </script>
+    <!-- list.js min js -->
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- multi.js -->
+    <script src="~/assets/libs/multi.js/multi.min.js"></script>
+    <!-- autocomplete js -->
+    <script src="~/assets/libs/AutoComplete/autocomplete.js/autoComplete.min.js"></script>
+    <!-- init js -->
+    <script src="~/assets/js/pages/form-advanced.init.js"></script>
+
+    <!-- echarts js -->
+    <script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+    <!-- echarts init -->
+    <script src="~/assets/js/pages/echarts.init.js"></script>
+
+    <!-- Dashboard init -->
+    <script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    @*<script src="~/assets/js/main.js"></script>*@
+    <script src="~/assets/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/assets/js/chat.js"></script>
+    <script src="~/assets/js/pages/index.init.js"></script>
+}

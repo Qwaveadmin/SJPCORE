@@ -1,0 +1,292 @@
+﻿@using Microsoft.JSInterop;
+@{
+    ViewBag.Title = "จัดการผู้ใช้งาน";
+    ViewBag.pTitle = "จัดการผู้ใช้งาน";
+    ViewBag.pageTitle = "จัดการผู้ใช้งาน";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section styles{
+    <!-- Sweet Alert css-->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- multi.js css -->
+    <link rel="stylesheet" type="text/css" href="~/assets/libs/multi.js/multi.min.css" />
+    <!-- autocomplete css -->
+    <link rel="stylesheet" href="~/assets/libs/@@tarekraafat/autocomplete.js/css/autoComplete.css">
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+}
+
+@model List<SJPCORE.Models.Attribute.UserModel>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">เพิ่มและแก้ไขผู้ใช้งาน</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div id="customerList">
+                    <div class="row g-4 mb-3">
+                        <div class="col-sm-auto">
+                            <div>
+                                <button type="button" class="btn btn-primary add-btn" data-bs-toggle="modal" id="create-users-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> เพิ่มผู้ใช้งาน</button>
+                            </div>
+                        </div>
+                        <div class="col-sm">
+                            <div class="d-flex justify-content-sm-end">
+                                <div class="search-box ms-2">
+                                    <input type="text" class="form-control search" placeholder="Search...">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive table-card mt-3 mb-1">
+                        <table class="table align-middle table-nowrap" id="userTable">
+                            <thead class="table-light">
+                                <tr>
+
+                                    <th class="sort" data-sort="user">ชื่อผู้ใช้งาน</th>
+                                    <th class="sort" data-sort="password">รหัสผ่าน</th>
+                                    <th class="sort" data-sort="role">สิทธ์การเข้าถึง</th>
+                                    <th class="sort" data-sort="action">แผงควบคุม</th>
+                                </tr>
+                            </thead>
+                            <tbody class="list form-check-all">
+
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="user">@item.Username</td>
+                                        <td class="password">@item.Password</td>
+                                        <td class="role"><span class="badge badge-soft-success text-uppercase">@item.Role</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <div class="edit">
+                                                    <button class="btn btn-sm btn-primary edit-item-btn"
+                                                        data-bs-toggle="modal" data-bs-target="#showModal">
+                                                        เเก้ไข
+                                                    </button>
+                                                </div>
+                                                <div class="remove">
+                                                    <button class="btn btn-sm btn-success remove-item-btn" data-bs-toggle="modal" data-bs-target="#deleteRecordModal">ลบผู้ใช้งาน</button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <div class="pagination-wrap hstack gap-2">
+                            <a class="page-item pagination-prev disabled" href="#">
+                                ก่อนหน้า
+                            </a>
+                            <ul class="pagination listjs-pagination mb-0"></ul>
+                            <a class="page-item pagination-next" href="#">
+                                ถัดไป
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card -->
+        </div>
+        <!-- end col -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light p-3">
+                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+            </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="user-field" class="form-label">ชื่อผู้ใช้งาน</label>
+                        <input type="text" id="user-field" class="form-control" placeholder="โปรดระบุชื่อผู้ใช้งาน" required />
+                        <div class="invalid-feedback">โปรดกรอกผู้ใช้งานด้วยครับ.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password-field" class="form-label">รหัสผ่าน</label>
+                        <input type="password" id="password-field" class="form-control" placeholder="โปรดระบุรหัสผ่าน" required />
+                        <div class="invalid-feedback">โปรดกรอกรหัสผ่านด้วยครับ.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status-field" class="form-label">สิทธิ์การเข้าถึง</label>
+                        <select class="form-control" data-trigger name="role-field" id="status-field" required>
+                            <option value="admin">ผู้ใช้งาน</option>
+                            <option value="users">แอดมิน</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="hstack gap-2 justify-content-end">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                        <button type="submit" class="btn btn-success" id="add-user-btn">เพิ่มผู้ใช้งาน</button>
+                    </div>
+                </div>
+        
+        </div>
+    </div>
+</div>
+
+<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ยืนยันการลบ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานนี้?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">ลบ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+  <script>
+        $(document).ready(function () {
+            // Update User Modal
+            $('#showModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var modal = $(this);
+                modal.find('.modal-title').text('Update User'); // Update modal title
+                modal.find('#submit-btn').text('Update'); // Update submit button text
+                modal.find('#username').val(button.closest('tr').find('.user').text()); // Update username text box
+                modal.find('#password').val(button.closest('tr').find('.password').text()); // Update password text box
+                modal.find('#role').val(button.closest('tr').find('.role span').text()); // Update role select box
+                modal.find('#create-update-form').attr('action', '/api/Users/' + button.data('id')); // Update form action
+            });
+
+            // Delete User Modal
+            $('#deleteRecordModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var modal = $(this);
+                modal.find('#delete-btn').attr('data-id', button.data('id')); // Update delete button data-id attribute
+            });
+
+            // Submit Form
+            $('#create-update-form').submit(function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var data = {
+                    'id': form.find('#id').val(),
+                    'username': form.find('#username').val(),
+                    'password': form.find('#password').val(),
+                    'role': form.find('#role').val()
+                };
+
+                $.ajax({
+                    type: "PUT",
+                    url: form.attr('action'),
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        if (response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'User updated successfully!',
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to update user.',
+                                timer: 3000
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.responseText,
+                            timer: 3000
+                        });
+                    }
+                });
+            });
+
+            // Delete Record
+            $('#delete-btn').click(function (event) {
+                var button = $(this);
+                $.ajax({
+                    type: "DELETE",
+                    url: '/api/Users/' + button.attr('data-id'),
+                    success: function (response) {
+                        if (response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'User deleted successfully!',
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to delete user.',
+                                timer: 3000
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.responseText,
+                            timer: 3000
+                        });
+                    }
+                });
+            });
+        });
+  </script>
+    <!-- Sweet Alerts js -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- prismjs plugin -->
+    <script src="~/assets/libs/prismjs/prism.js"></script>
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

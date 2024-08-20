@@ -1,0 +1,720 @@
+﻿@{
+    ViewBag.Title = "สถานะสถานี";
+    ViewBag.pTitle = "สถานะสถานี";
+    ViewBag.pageTitle = "สถานะสถานี";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+
+ <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+
+
+}
+@model IEnumerable<StationModel>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card crm-widget">
+            <div class="card-body p-0">
+                <div class="row row-cols-md-3 row-cols-1">
+                    <div class="col col-lg border-end">
+                        <div class="py-4 px-3">
+                            <h5 class="text-primary text-uppercase fs-13">
+                                จำนวนเสาทั้งหมด
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-base-station-line  display-6 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3 ">
+                                    <h2 class="mb-0 text-primary"><span class="counter-value" data-target="@Model.Count()">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนเสาที่ถูกเปิดใช้งาน
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-check-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="@Model.Where(w=>w.active == true).Count()">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนเสาที่ไม่ถูกเปิดใช้งาน
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-close-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="@Model.Where(w=>w.active == false).Count()" >0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class=" text-uppercase text-success fs-13">
+                                จำนวนเสาที่ออนไลน์
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-base-station-line display-6 text-success"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0  text-success"><span class="counter-value" id="station-cnt-online" data-target="3">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class=" text-uppercase text-danger fs-13">
+                                จำนวนเสาที่ออฟไลน์
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-base-station-line display-6 text-danger"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0 text-danger"><span class="counter-value" id="station-cnt-offline" data-target="0">0</span> เสา</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div><!-- end row -->
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                        จัดการเสากระจายเสียง
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group">
+                            <input type="text" id="search-box" class="form-control" placeholder="ค้นหาชื่อเสา" onkeyup="filterTable(event)">
+                            <button type="button" class="btn btn-warning btn-sm btn-label waves-effect waves-light float-end" data-bs-toggle="modal" data-bs-target="#varyingcontentModal" data-bs-whatever="@Model"><i class=" ri-add-line label-icon align-middle fs-16 me-2"></i> เพิ่มเสากระจายเสียง</button>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:100px;">ไอดี</th>
+                                <th scope="col">ชื่อเสา</th>
+                                <th scope="col">สถานะ</th>
+                                <th scope="col" style="width:200px;">เสียง</th>
+                                <th scope="col" style="width:150px;">แผงควบคุม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><a href="#" class="fw-semibold link-danger key-station" id="@item.key">@item.key</a></td>
+                                    <td>@item.name</td>
+                                    <td id="status-@item.key" class="station-status">@item.status</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm custom-toggle @(item.mute ? "" : "active")" onclick="MuteStation(@Convert.ToInt16(item.mute), '@item.key');" data-bs-toggle="button" id="mute-button">
+                                            <span class="icon-on"><i class="ri-volume-mute-line ri-xl text-danger align-middle"></i></span>
+                                            <span class="icon-off"><i class="ri-volume-up-line ri-xl text-success align-middle"></i></span>
+                                        </button>
+                                        <input type="range" class="volume align-middle" min="0" max="100" id="volume_slider-@item.key" value="@item.vol" key-value="@item.key" onchange="changevol(this)">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#varyingcontentModal2" grp="@item.name" key-grp="@item.key" onclick="openModal(this)">
+                                            <i class=" ri-play-circle-line label-icon align-middle fs-16 me-2"></i>เล่นเสียง
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" grp="@item.name" key-grp="@item.key" onclick="stopmedia(this)">
+                                            <i class=" ri-stop-circle-line label-icon align-middle fs-16 me-2"></i>หยุดเสียง
+                                        </button>
+                                        <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("info","station")?id=@item.key">
+                                            <i class="  ri-eye-line label-icon align-middle fs-16 me-2"></i>ดูข้อมูล
+                                        </a>
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("settings","station")?id=@item.key">
+                                            <i class="  ri-settings-4-line label-icon align-middle fs-16 me-2"></i>ตั้งค่า
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end col -->
+
+   
+</div>
+<!-- Varying modal content -->
+<div class="modal fade" id="varyingcontentModal" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">สร้างเสากระจายเสียง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form>
+                    <div class="mb-1">
+                        <div class="row">
+                            <div class="col-4">
+                                <label for="recipient-name" class="col-form-label">ไอดีเสากระจายเสียง (ไม่จำเป็น) :</label>
+                                <input type="text" class="form-control" id="id-station" placeholder="ไอดี (ไม่จำเป็นต้องกรอก)">
+                            </div>
+                            <div class="col-8">
+                                <label for="recipient-name" class="col-form-label">ชื่อเสากระจายเสียง :</label>
+                                <input type="text" class="form-control" id="name-station" placeholder="ชื่อเสากระจายเสียง">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary" id="create_station">สร้างเสากระจายเสียง</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Varying modal content -->
+<div class="modal fade" id="varyingcontentModal2" tabindex="-1" aria-labelledby="varyingcontentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="varyingcontentModalLabel">เครื่องเล่นเสียง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-1">
+                    <label for="recipient-name" class="col-form-label">ชื่อกลุ่ม :</label>
+                    <input type="text" class="form-control" id="grp-name-modal" readonly>
+                    <input type="hidden" class="form-control" id="grp-key-modal">
+                </div>
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 mt-2 border-bottom"></div>
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <label for="recipient-name" class="col-form-label">ประเภท :</label>
+                            <select class="form-select mb-3" id="typesound">
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="recipient-name" class="col-form-label">รายการเสียง :</label>
+                            <select class="form-select mb-3" id="listsound">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-primary" id="btnplaynow">เล่นเสียงเดี๋ยวนี้</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+    <script>
+        function filterTable(event) {
+            const searchText = event.target.value.toLowerCase();
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const name = row.querySelector("td:nth-child(2)").textContent.toLowerCase();
+
+                if (name.includes(searchText)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            updateStationLinks();
+            sendMessagetoCore('stream', '', 'all', 'stop');
+        });
+
+        function sendMessagetoCore(messagetype, message, target_uid, cmd) {
+
+            var data = {
+                user: "",
+                type_user: "multi",
+                cmd: cmd,
+                type: messagetype,
+                message: JSON.stringify(message),
+                target: target_uid,
+                target_multi: [target_uid]
+            };
+            return new Promise(function (resolve, reject) {
+                $.ajax({
+                    type: "POST",
+                    url: "/station/WebRTC",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        resolve(response);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    }
+                });
+            });
+        };
+
+        function updateStationLinks() {
+            $.ajax({
+                url: "/station/online",
+                type: "GET",
+                success: function (response) {
+                    var onlineCount = 0;
+                    var offlineCount = 0;
+
+                    // loop through each station link and update its class based on whether it is online or not
+                    $('.key-station').each(function () {
+                        var stationId = $(this).attr('id');
+                        var isOnline = false;
+
+                        for (var i = 0; i < response.message.length; i++) {
+                            if (response.message[i].id === stationId) {
+                                isOnline = true;
+                                $('#status-' + stationId).text(response.message[i].status);
+                                break;
+                            }
+                        }
+
+                        if (isOnline) {
+                            $(this).removeClass('link-danger').addClass('link-success');
+                            onlineCount++;
+                        } else {
+                            $(this).removeClass('link-success').addClass('link-danger');
+                            offlineCount++;
+                        }
+                    });
+
+                    // update the online and offline station count in the HTML
+                    $('#station-cnt-online').text(onlineCount);
+                    $('#station-cnt-online').attr('data-target', onlineCount);
+                    $('#station-cnt-offline').text(offlineCount);
+                    $('#station-cnt-offline').attr('data-target', offlineCount);
+                },
+                error: function () {
+                    console.log("Error retrieving station online status");
+                }
+            });
+        }
+
+        setInterval(updateStationLinks, 1000);
+    </script>
+    <script>
+        document.getElementById("btnplaynow").addEventListener("click", function () {
+
+            const listsound = document.getElementById("listsound");
+            const typesound = document.getElementById("typesound");
+            const key = document.getElementById("grp-key-modal");
+            const selectedValue_listsound = listsound.options[listsound.selectedIndex].value;
+            const selectedValue_typesound = typesound.options[typesound.selectedIndex].value;
+
+            var data = {
+                key: key.value,
+                type_user: 'user',
+                type_play: selectedValue_typesound,
+                key_sound: selectedValue_listsound
+            };
+            $.ajax({
+                type: "POST",
+                url: "/station/mqtt",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                  if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload()
+                        })
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        })
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: xhr.responseText,
+                    })
+                }
+            });
+        });
+    </script>
+    
+        <script>
+
+        function MuteStation(statusMute, keyStation) {
+
+            var mute_status = Boolean(statusMute);
+            var mute_message = mute_status ? 'เปิดเสียง' : 'ปิดเสียง';
+
+            const data = {
+                key: keyStation,
+                type_user: 'user',
+                mute: !mute_status
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/station/mute',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: `${mute_message} ${keyStation} สำเร็จ`,
+                            timer: 3000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: errorThrown,
+                    });
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Load the typesound select element with the available options
+            $.ajax({
+                url: '/station/soundList',
+                method: 'GET',
+                success: function (data) {
+                    var options = '';
+                    var types = {};
+                    $.each(data.message, function (i, sound) {
+                        types[sound.type] = true;
+                    });
+                    for (var type in types) {
+                        options += '<option value="' + type + '">' + type.toUpperCase() + '</option>';
+                    }
+                    $('#typesound').html(options);
+
+                    // Trigger the change event on the typesound select element to load the listsound select element with the appropriate options
+                    $('#typesound').trigger('change');
+                }
+            });
+
+            // Bind the change event listener to the typesound select element
+            $('#typesound').change(function () {
+                var selectedType = $(this).val();
+                $.ajax({
+                    url: '/station/soundList',
+                    method: 'GET',
+                    success: function (data) {
+                        var options = '';
+                        $.each(data.message, function (i, sound) {
+                            if (sound.type === selectedType) {
+                                options += '<option value="' + sound.key + '">' + sound.name + '</option>';
+                            }
+                        });
+                        $('#listsound').html(options);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+
+       
+
+                $(document).ready(function () {
+            $("#volumeSet3").change(function () {
+                var volume = $(this).val();
+                var keystation = $("#keystation3").text();
+                var data = {
+                    id: keystation,
+                    vol: volume ,                
+                    user: 'gasza',
+                    cmd: 'ch-vol'
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/Station/Mqtt/Volume",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        console.log(response);
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.getElementById("create_station").addEventListener("click", function () {
+
+            const station_name = document.getElementById("name-station").value;
+            const station_id = document.getElementById("id-station").value;
+
+            // Validate input
+            const errors = [];
+            if (!station_name) {
+                errors.push("กรุณากรอกชื่อเสากระจายเสียง");
+            }
+           
+            if (errors.length > 0) {
+                const errorHtml = errors.map(error => `<li>${error}</li>`).join("");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    html: `กรุณาแก้ไขข้อผิดพลาดต่อไปนี้<ul>${errorHtml}</ul>`,
+                });
+                return; // Stop the function if there are errors
+            }
+
+            if (station_id == null) {
+                var data = {
+                name: station_name
+                
+                };
+            
+                $.ajax({
+                    type: "POST",
+                    url: "/station/create",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ..',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            })
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: response.message,
+                                timer: 3000,
+                            })
+                        }
+
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: error.responseText,
+                        })
+                    }
+                });
+            }else{
+                var data = {
+                    name: station_name,
+                    key: station_id
+
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/station/create",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ..',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            })
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: response.message,
+                                timer: 3000,
+                            })
+                        }
+
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: error.responseText,
+                        })
+                    }
+                });
+            }
+            
+           
+
+           
+        });
+    </script>
+
+    <script>
+        function openModal(btn) {
+            var modalname = document.getElementById("grp-name-modal");
+            var modalkey = document.getElementById("grp-key-modal");
+            modalname.value = btn.attributes["grp"].value;
+            modalkey.value = btn.attributes["key-grp"].value;
+        }
+
+        function stopmedia(btn) {
+            var data = {
+                key: btn.attributes["key-grp"].value,
+                type_user: 'user',
+                type: 'media'
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/station/stop',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        }
+
+        function changevol (bar) {
+
+                var data = { 
+                    vol: bar.value, 
+                    type_user: 'user', 
+                    key: bar.attributes["key-value"].value 
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/station/vol",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ..',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: response.message,
+                                timer: 3000,
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: error.responseText,
+                        });
+                    }
+                });
+        }
+    </script>
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

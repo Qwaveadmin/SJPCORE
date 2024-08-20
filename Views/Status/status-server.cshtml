@@ -1,0 +1,150 @@
+﻿@{
+    ViewBag.Title = "สถานะเซิฟเวอร์";
+    ViewBag.pTitle = "สถานะเซิฟเวอร์";
+    ViewBag.pageTitle = "สถานะเซิฟเวอร์";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model Tuple<ConfigModel>
+
+@section styles{
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+}
+
+
+
+<div class="col-xxl-12">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3" style="border-right: 3px solid #F2F7F9;">
+                    <div class="nav flex-column nav-pills text-center " id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">MQTT BROKER (LOCAL)</a>
+                      @*  <a class="nav-link mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false" tabindex="-1">MQTT BROKER (CLOUD)</a>*@
+                        @*<a class="nav-link mb-2" id="v-pills-rtsp-tab" data-bs-toggle="pill" href="#v-pills-rtsp" role="tab" aria-controls="v-pills-rtsp" aria-selected="false" tabindex="-1">RTSP SERVER</a>*@
+                    </div>
+                </div><!-- end col -->
+                <div class="col-md-9">
+                    <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                        <div class="tab-pane fade active show" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่าเว็บไซต์</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าเว็บไซต์ได้ที่หน้านี้</label>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <!-- โค้ด HTML สำหรับตาราง -->
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>เวลาที่เชื่อมต่อ</th>
+                                        <th>เวลาที่รับแพคเกจล่าสุด</th>
+                                        <th>จำนวนข้อความแอปพลิเคชันที่รับได้</th>
+                                        <th>จำนวนข้อความแอปพลิเคชันที่ส่งได้</th>
+                                        <th>จำนวนไบต์ที่ส่ง</th>
+                                        <th>จำนวนไบต์ที่รับ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                </tbody>
+                            </table>
+
+
+                        </div>
+                        <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+
+
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่า MQTT BROKER</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่า MQTT BROKER ได้ที่หน้านี้</label>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+
+                        </div>
+
+                        <div class="tab-pane fade" id="v-pills-rtsp" role="tabpanel" aria-labelledby="v-pills-rtsp-tab">
+
+
+                            <h4 class="mx-1 my-2 text-primary">ตั้งค่า RTSP SERVER</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่า RTSP SERVER ได้ที่หน้านี้</label>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ชื่อผู้ใช้งาน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="ชื่อผู้ใช้งาน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_PASS").FirstOrDefault().value">
+                            </div>
+                            <div class="mb-3">
+                                <label for="card-holder-input" class="form-label"><i class=" ri-lock-password-line text-muted me-1"></i><strong>รหัสผ่าน broker</strong></label>
+                                <input type="text" class="form-control" id="card-holder-input" placeholder="รหัสผ่าน server" value="@GlobalParameter.Config.Where(w=>w.key=="CONFIG_MQTT_PASS").FirstOrDefault().value">
+                            </div>
+
+
+                            <!-- Buttons with Label Right -->
+                            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล</button>
+
+
+                        </div>
+
+                    </div>
+                </div><!--  end col -->
+            </div>
+            <!--end row-->
+        </div><!-- end card-body -->
+    </div><!-- end card -->
+</div>
+
+
+@section scripts{
+
+    <!-- โค้ด JavaScript เพื่อดึงข้อมูลและแสดงผลในตาราง HTML -->
+    <script>
+        fetch('/mqtt/clients')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('table-body');
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                  <td>${item.id}</td>
+                  <td>${item.connectedTimestamp}</td>
+                  <td>${item.lastPacketReceivedTimestamp}</td>
+                  <td>${item.receivedApplicationMessagesCount}</td>
+                  <td>${item.sentApplicationMessagesCount}</td>
+                  <td>${item.bytesSent}</td>
+                  <td>${item.bytesReceived}</td>
+                `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error(error));
+    </script>
+<!-- apexcharts -->
+<script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+<!-- Vector map-->
+<script src="~/assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/world-merc.js"></script>
+<script src="~/assets/libs/jsvectormap/maps/thailand.js"></script>
+
+<!-- apexcharts init -->
+<script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+
+<!--Swiper slider js-->
+<script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+<!-- echarts js -->
+<script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+<!-- echarts init -->
+<script src="~/assets/js/pages/echarts.init.js"></script>
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

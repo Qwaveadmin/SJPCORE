@@ -1,0 +1,336 @@
+﻿@{
+    ViewBag.Title = "บันทึกไฟล์เสียง";
+    ViewBag.pTitle = "บันทึกไฟล์เสียง";
+    ViewBag.pageTitle = "บันทึกไฟล์เสียง";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <!-- jsvectormap css -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Swiper slider css-->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- Plugins css -->
+    <link href="~/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css" />
+
+    <!-- dropzone css -->
+    <link rel="stylesheet" href="~/assets/libs/dropzone/dropzone.css" type="text/css" />
+
+    <!-- Filepond css -->
+    <link href="~/assets/libs/filepond/filepond.min.js" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css" rel="stylesheet" type="text/css" />
+     <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+}
+
+<h2 class="text-center text-dark mt-3 mb-3">บันทึกไฟล์เสียง</h2>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+
+                <div class="row">
+                    <div class="col-6 float-start">
+                        ทดสอบบันทึกเเละเล่นเสียง
+                    </div>
+                    <div class="col-6 ">
+                        <div id="microphone-status" class="float-end">สถานะอุปกรณ์รับเสียง : ยังไม่เชื่อมต่อ</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 float-start">
+                        <div class="d-grid gap-2 mt-3">
+                            <button id="start-recording" class="btn btn-success">อัดเสียง</button>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-grid gap-2 mt-3">
+                            <button  id="stop-recording" type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#firstmodal"><i class="ri-file-upload-line label-icon align-middle me-2"></i> หยุดอัดเสียง </button>
+                        </div>
+                    </div>
+                </div>
+                <br><br>
+                <canvas id="audio-waveform" style="width: 100%; height: 150px; position: relative; display:none;"></canvas>
+
+            </div>
+        </div><!-- end card -->
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:100px;">รหัส</th>
+                                <th scope="col" style="width:100px;">ชื่อไฟล์</th>
+                                <th scope="col" style="width:200px;">แผงควบคุม</th>                               
+                                <th scope="col" style="width:100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbbody">                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+    </div><!-- end col -->
+</div>
+<!-- First modal dialog -->
+<div class="modal fade" id="firstmodal" aria-hidden="true" aria-labelledby="..." tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <h3>ตั้งชื่อไฟล์</h3>
+                        <div id="form-text" class="text-danger mb-3"></div>
+                            <input type="text" class="form-control" id="filename" placeholder="ชื่อไฟล์">
+                                
+                                <input class="form-control" id="category" name="category" value="music" type="hidden">
+
+                                <!-- Buttons Grid -->
+                                <div class="d-grid gap-2">
+                                    <button id="save-record" type="submit" class="btn btn-primary mt-3 "><i class="  ri-file-upload-line label-icon align-middle fs-16 me-2 "></i>อัพโหลด</button>
+                                </div>
+                            
+                    </div> <!-- end col -->
+                </div>
+                <!-- end row -->
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+
+    <script>
+        var label_status = document.getElementById("microphone-status");
+        var canvas_wave = document.getElementById("audio-waveform");
+
+        var timerInterval;       
+        var timerEl
+        var startTime
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var stream;
+        var recorder;
+        var chunks = [];
+        var visualizer;
+        var audioURL;
+        let audioFile = {};
+
+          
+
+        // start recording
+        document.getElementById("start-recording").addEventListener("click", function () {
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (s) {
+                if (recorder) {
+                    return;
+                }
+                stream = s;
+                recorder = new MediaRecorder(stream);
+                
+                recorder.start();
+                startTime = Date.now();
+                timerInterval = setInterval(function() {
+                    var elapsed = Date.now() - startTime;
+                    var minutes = Math.floor(elapsed / 60000);
+                    var seconds = Math.floor((elapsed % 60000) / 1000);
+                    timerEl = ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+                    label_status.innerText = "สถานะอุปกรณ์รับเสียง : กำลังอัดเสียง " + timerEl;
+                  }, 1000);
+                
+                canvas_wave.style.display = "block";
+
+                // visualize audio
+                visualizer = audioCtx.createAnalyser();
+                var source = audioCtx.createMediaStreamSource(stream);
+                source.connect(visualizer);
+                visualizer.fftSize = 2048;
+                var bufferLength = visualizer.frequencyBinCount;
+                var dataArray = new Uint8Array(bufferLength);
+                visualizer.getByteTimeDomainData(dataArray);
+
+                var canvas = document.getElementById("audio-waveform");
+                var canvasCtx = canvas.getContext("2d");
+                
+                function draw() {
+                    var drawVisual = requestAnimationFrame(draw);
+                    visualizer.getByteTimeDomainData(dataArray);
+                    canvasCtx.fillStyle = "rgb(200, 200, 200)";
+                    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                    canvasCtx.lineWidth = 2;
+                    canvasCtx.strokeStyle = "rgb(0, 0, 0)";
+                    canvasCtx.beginPath();
+
+                    var sliceWidth = canvas.width * 1.0 / bufferLength;
+                    var x = 0;
+                    for (var i = 0; i < bufferLength; i++) {
+                        var v = dataArray[i] / 128.0;
+                        var y = v * canvas.height / 2;
+                        if (i === 0) {
+                            canvasCtx.moveTo(x, y);
+                        } else {
+                            canvasCtx.lineTo(x, y);
+                        }
+                        x += sliceWidth;
+                    }
+                    canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                    canvasCtx.stroke();
+                }
+                
+                draw();
+                chunks = [];
+                recorder.ondataavailable = function (e) {
+                    chunks.push(e.data);
+                }
+            }).catch(function (err) {
+                label_status.innerText = "สถานะอุปกรณ์รับเสียง : " + err;
+            });;
+        });
+
+        // stop recording
+        document.getElementById("stop-recording").addEventListener("click", function () {
+                recorder.stop();
+                recorder = null;         
+                clearInterval(timerInterval);
+                canvas_wave.style.display = "none";
+                stream.getTracks().forEach(function (track) { track.stop(); });
+                label_status.innerText = "สถานะอุปกรณ์รับเสียง : หยุดการอัดเสียง " + timerEl;
+        });
+
+
+        document.getElementById("save-record").addEventListener("click", function () {
+                var filename = document.getElementById("filename").value;
+
+                if (filename == "") {
+                    document.getElementById("form-text").innerText = "กรุณาใส่ชื่อไฟล์";
+                    return;
+                }
+                const id = String(Math.floor(Math.random() * 100000));
+                const recordrow = document.createElement("tr");
+                const audioplayer = document.createElement("audio");
+                const recordid = document.createElement("td");
+                const recordname = document.createElement("td");
+                const recordplayer = document.createElement("td");
+                const recordsave = document.createElement("td");
+                const btnsave = document.createElement("button");    
+                const btnremove = document.createElement("button");           
+                
+                var blob = new Blob(chunks, { type: "audio/mpeg" });                
+                audioFile[id] = new File([blob], `${filename}.mp3`, { type: "audio/mpeg" });
+
+                audioplayer.src = URL.createObjectURL(audioFile[id]);
+                audioplayer.controls = true;
+                audioplayer.autoplay = true;
+
+                recordrow.id = `record-${id}`;
+                btnsave.innerText = "บันทึกไปยังคลัง";
+                btnsave.className = "btn btn-primary";
+                btnsave.value = id;
+                btnsave.id = `btnsave-${id}`;
+                btnsave.addEventListener("click", function () {
+                        // Create a new form data object
+                        var formData = new FormData();
+                        formData.append("file", audioFile[id]);
+                        formData.append("category","Record");
+
+                        // Send the form data using a POST request
+                        fetch("/Storage/Sound", {
+                        method: "POST",
+                        body: formData
+                        })
+                        .then(response => {
+                        console.log("Success:", response);
+                        Swal.fire("Success", response.message, "success");
+                        })
+                        .catch(error => {
+                        console.error("Error uploading file:", error);
+                        });                     
+                    });
+                
+                btnremove.innerText = "ลบ";
+                btnremove.className = "btn btn-danger";
+                btnremove.value = id;
+                btnremove.id = `btnremove-${id}`;
+                btnremove.addEventListener("click", function () {
+                    document.getElementById(`record-${id}`).remove();
+                    delete audioFile[id];
+                });
+                    
+            
+                recordid.innerText = id;
+                recordname.innerText = filename;
+                recordplayer.appendChild(audioplayer);
+                recordsave.appendChild(btnsave);
+                recordsave.appendChild(btnremove);
+                recordrow.appendChild(recordid);
+                recordrow.appendChild(recordname);
+                recordrow.appendChild(recordplayer);
+                recordrow.appendChild(recordsave);
+                document.getElementById("tbbody").appendChild(recordrow);
+
+                chunks = [];
+                label_status.innerText = "สถานะอุปกรณ์รับเสียง : อัดเสียงเรียบร้อย";
+                filename = "";
+               
+        });
+
+    </script>
+
+    <!-- list.js min js -->
+    <script src="~/assets/libs/list.js/list.min.js"></script>
+    <script src="~/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- multi.js -->
+    <script src="~/assets/libs/multi.js/multi.min.js"></script>
+
+        <!-- autocomplete js -->
+    <script src="~/assets/libs/AutoComplete/autocomplete.js/autoComplete.min.js"></script>
+    <!-- init js -->
+    <script src="~/assets/js/pages/form-advanced.init.js"></script>
+
+    <!-- apexcharts -->
+    <script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+    <!-- Vector map-->
+    <script src="~/assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+    <script src="~/assets/libs/jsvectormap/maps/world-merc.js"></script>
+    <script src="~/assets/libs/jsvectormap/maps/thailand.js"></script>
+
+    <!-- filepond js -->
+    <script src="~/assets/libs/filepond/filepond.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+
+    <script src="~/assets/js/pages/form-file-upload.init.js"></script>
+    <!-- apexcharts init -->
+    <script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+    <script src="~/assets/libs/dropzone/dropzone-min.js"></script>
+    <!--Swiper slider js-->
+    <script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+    <!-- echarts js -->
+    <script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+    <!-- echarts init -->
+    <script src="~/assets/js/pages/echarts.init.js"></script>
+
+    <!-- Dashboard init -->
+    <script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+}

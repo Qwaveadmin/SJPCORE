@@ -1,0 +1,353 @@
+﻿@{
+    ViewBag.Title = "Youtube Player";
+    ViewBag.pTitle = "Youtube Player";
+    ViewBag.pageTitle = "Youtube Player";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model IEnumerable<YtModel>
+
+@section styles{
+
+    <!-- gridjs css -->
+    <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css">
+    <!-- Sweet Alert css-->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+    <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 0;
+        }
+
+            .table td:hover {
+                max-width: none;
+                overflow: visible;
+                white-space: normal;
+                z-index: 9999;
+                position: relative;
+                background-color: #fff;
+                color: #000;
+                font-weight: bold;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                border-radius: 5px;
+            }
+    </style>
+}
+
+<h2 class="text-center text-dark mt-3 mb-3">Youtube Player - เครื่องเล่นเเละทดสอบ Youtube</h2>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                เพิ่ม URL
+            </div>
+            <div class="card-body">
+                <div>
+                    <label for="exampleFormControlTextarea5" class="form-label fw-bold ">
+                        ชื่อ
+                    </label>
+                    <input type="url" class="form-control mb-3" id="NameYt">
+
+                    <label for="exampleFormControlTextarea5" class="form-label fw-bold">
+                        URL VIDEO
+                    </label>
+                    <input type="url" class="form-control" id="UrlYt">
+
+
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="addUrl" onclick="addUrl()"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>เพิ่ม URL</button>
+                    </div>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                        จัดการ URL
+                    </div>
+                    <div class="col-6">
+                        <input type="text" class="form-control" id="search-input" placeholder="ค้นหา...">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0" id="url-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:300px">แผงควบคุม</th>
+                                <th scope="col">ชื่อรายการ</th>
+                                <th scope="col">URL</th>
+                                <th scope="col">สร้างเมื่อ</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="playYT('@item.url')">
+                                            <i id="play-pause-icon-@item.url" class=" ri-play-circle-line label-icon align-middle fs-16 me-2"></i>
+                                            <span id="play-pause-text-@item.url">เล่นเสียง</span>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteStation('@item.id')">
+                                            <i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2"></i>ลบ URL</button>
+                                    </td>
+                                    <td>@item.name</td>
+                                    <td><a href="@item.url">@item.url</a></td>
+                                    <td>@item.create_at</td>
+
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+
+</div>
+
+@section scripts{
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const table = document.getElementById('url-table');
+
+        searchInput.addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase().trim();
+
+            for (let i = 0; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const controlPanel = row.cells[0].textContent.toLowerCase();
+                const name = row.cells[1].textContent.toLowerCase();
+                const urlCell = row.cells[2];
+                const urlLink = urlCell.querySelector('a');
+                const url = urlLink ? urlLink.textContent.toLowerCase() : '';
+
+                if (controlPanel.includes(searchValue) || name.includes(searchValue) || url.includes(searchValue) || status.includes(searchValue)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            }
+        });
+    </script>
+
+    <script>
+        const audio = new Audio();
+        let isPlaying = false;
+        let currentKey = null;
+
+        function playYT(key) {
+            const iconKey = document.getElementById('play-pause-icon-' + key);
+            const textKey = document.getElementById('play-pause-text-' + key);
+            let result;
+            var formData = new FormData();
+            formData.append("url", key);
+            const response = fetch("GobYtPlayer", {
+                method: 'POST',
+                body: formData
+            });
+            response.then(response => response.json())
+                .then(data => {
+                    if (currentKey !== null && currentKey !== key) {
+                        audio.pause();
+                        document.getElementById('play-pause-icon-' + currentKey).classList.remove('ri-pause-circle-line');
+                        document.getElementById('play-pause-icon-' + currentKey).classList.add('ri-play-circle-line');
+                        document.getElementById('play-pause-text-' + currentKey).innerText = 'เล่นเสียง';
+                        currentKey = null;
+                    };
+
+                    if (isPlaying && currentKey == key) {
+                        audio.pause();
+                        isPlaying = false;
+                        iconKey.classList.remove('ri-pause-circle-line');
+                        iconKey.classList.add('ri-play-circle-line');
+                        textKey.innerText = 'เล่นเสียง';
+
+                    } else {
+                        currentKey = key
+                        audio.src = data.message;
+                        audio.play();
+                        isPlaying = true;
+                        iconKey.classList.remove('ri-play-circle-line');
+                        iconKey.classList.add('ri-pause-circle-line');
+                        textKey.innerText = 'หยุดเล่น';
+                    }
+
+                    audio.addEventListener('ended', function () {
+                        isPlaying = false;
+                        iconKey.classList.remove('ri-pause-circle-line');
+                        iconKey.classList.add('ri-play-circle-line');
+                        textKey.innerText = 'เล่นเสียง';
+                    });
+                })
+                .catch(error => console.error(error));
+        }
+    </script>
+
+    <script>
+
+
+        function deleteStation(id) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: 'คุณแน่ใจ?',
+                text: "หากลบ Url จะหายเเละไม่สามารถเรียก Url นี้อีกได้!!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ตกลง, ลบมัน!',
+                cancelButtonText: 'ไม่, ยกเลิก!',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "DELETE",
+                        url: "/tools/ytplayer?id=" + id,
+                        success: function (data) {
+                            if (data.success) {
+                                swalWithBootstrapButtons.fire({
+                                    icon: 'success',
+                                    title: 'ลบสำเร็จ',
+                                    text: data.message,
+                                    timer: 3000,
+                                    onClose: () => location.reload()
+                                }).then(() => {
+                                    location.reload()
+                                })
+
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                )
+                            }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            swalWithBootstrapButtons.fire(
+                                'Error!',
+                                xhr.status + ' ' + thrownError,
+                                'error'
+                            )
+                        }
+                    });
+                } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    swalWithBootstrapButtons.fire(
+                        'ยกเลิกสำเร็จ',
+                        'URL ยังคงอยู่ :)',
+                        'error'
+                    )
+                }
+            })
+        }
+        // Function to send the POST request to the backend
+        function addUrl() {
+            // Get the value of the input field
+            let url = $("#UrlYt").val();
+            let name = $("#NameYt").val();
+
+            if (!url) {
+                // Show an alert if the URL input field is empty
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    text: 'โปรดระบุ URL Youtube ครับ!',
+                })
+            } else {
+                if (!name) {
+                    // Show an alert if the URL input field is empty
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: 'โปรดระบุ ชื่อรายการ ครับ!',
+                    })
+
+                }else{
+                    // Create a JavaScript object to send to the backend
+                    let body = {
+                        url: url,
+                        name:name
+                    }
+                    $.ajax({
+                        type: "POST",
+                        url: "/tools/ytplayer",
+                        data: JSON.stringify(body),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'สำเร็จ..',
+                                    text: response.message,
+                                    timer: 3000,
+                                    onClose: () => location.reload()
+                                }).then(() => {
+                                    location.reload()
+                                })
+
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด!!',
+                                    text: response.message,
+                                })
+                            }
+
+
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: xhr.responseText,
+                            })
+                        }
+                    });
+                }
+               
+            }
+        }
+
+    </script>
+
+    <!-- prismjs plugin -->
+    <script src="~/assets/libs/prismjs/prism.js"></script>
+
+    <!-- gridjs js -->
+    <script src="~/assets/libs/gridjs/gridjs.umd.js"></script>
+    <!-- Sweet Alerts js -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- gridjs init -->
+    <script src="~/assets/js/pages/gridjs.init.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+}

@@ -1,0 +1,207 @@
+﻿
+@section styles{
+    
+}
+
+
+<!-- Button HTML -->
+<button type="button" class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3" id="popup-btn">
+    <i class="ri-terminal-line"></i>
+</button>
+
+<!-- Popup HTML -->
+<div id="popup-container">
+    <div id="popup-header">
+        <span id="popup-title">Terminal</span>
+        <span id="popup-buttons">
+            <button type="button" class="popup-btn" id="popup-clear-btn">Clear</button>
+            <button type="button" class="popup-btn" id="popup-minimize-btn">&#8722;</button>
+            <button type="button" class="popup-btn" id="popup-close-btn">&#10006;</button>
+        </span>
+    </div>
+    <div id="popup-content">
+        <div id="popup-messages"></div>
+    </div>
+</div>
+
+<!-- CSS -->
+<style>
+    #popup-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    /* CSS */
+    #popup-container {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        bottom: -50%;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        background-color: #f0f0f0;
+        color: #000;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 16px;
+        overflow-y: scroll;
+        transition: bottom 0.5s ease-in-out;
+    }
+
+        #popup-container.show {
+            bottom: 0;
+        }
+
+    #popup-header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px;
+        background-color: #d1d1d1;
+        border-bottom: 1px solid #c3c3c3;
+    }
+
+    #popup-title {
+        font-weight: bold;
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .popup-btn {
+        background-color: transparent;
+        border: none;
+        color: #000;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    #popup-content {
+        padding: 10px;
+    }
+
+    #popup-messages {
+        height: 100%;
+    }
+
+        #popup-messages p {
+            margin: 5px 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+</style>
+
+   
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    <script src="~/assets/libs/signalR/signalr.min.js"></script>
+
+<script>
+    const popupBtn = document.getElementById('popup-btn');
+    const popupContainer = document.getElementById('popup-container');
+    const popupHeader = document.getElementById('popup-header');
+    const popupTitle = document.getElementById('popup-title');
+    const popupMinimizeBtn = document.getElementById('popup-minimize-btn');
+    const popupCloseBtn = document.getElementById('popup-close-btn');
+    const popupMessages = document.getElementById('popup-messages');
+    const popupClearBtn = document.getElementById('popup-clear-btn');
+
+    let connection = null;
+
+    // Restore the messages from local storage
+    const savedMessages = localStorage.getItem('popupMessages');
+    if (savedMessages) {
+        popupMessages.innerHTML = savedMessages;
+    }
+
+    // Connect to the SignalR hub
+    function connect() {
+        if (!connection) {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl('/chatHub')
+                .build();
+
+            connection.on('Signaling', function (clientId) {
+                const message = `${getCurrentTime()} [INFO] ${clientId}`;
+                addMessage(message);
+
+                // Remove the oldest message if the number of messages exceeds 50
+                if (popupMessages.children.length > 50) {
+                    popupMessages.removeChild(popupMessages.children[0]);
+                }
+
+                // Save the messages to local storage
+                saveMessages();
+            });
+
+            connection.start()
+                .then(() => {
+                    console.log('SignalR connection started.');
+                })
+                .catch(err => {
+                    console.error('SignalR connection error: ' + err);
+                    // Try to reconnect in 5 seconds
+                    setTimeout(() => connect(), 5000);
+                });
+        }
+    }
+
+    // Try to connect on page load
+    connect();
+
+    popupBtn.addEventListener('click', () => {
+        showPopup();
+    });
+
+    popupMinimizeBtn.addEventListener('click', () => {
+        popupContainer.classList.remove('show');
+    });
+
+    popupCloseBtn.addEventListener('click', () => {
+        popupContainer.classList.remove('show');
+        setTimeout(() => {
+            popupContainer.style.display = 'none';
+        }, 500);
+    });
+
+    popupClearBtn.addEventListener('click', () => {
+        popupMessages.innerHTML = '';
+        localStorage.removeItem('popupMessages');
+    });
+
+    // Show the popup
+    function showPopup() {
+        popupContainer.style.display = 'block';
+        setTimeout(() => {
+            popupContainer.classList.add('show');
+            scrollToBottom();
+        }, 50);
+    }
+
+    // Add a message to the popup
+    function addMessage(message) {
+        const messageElement = document.createElement('p');
+        messageElement.innerText = message;
+        popupMessages.appendChild(messageElement);
+        scrollToBottom();
+    }
+
+    // Scroll to the bottom of the popup
+    function scrollToBottom() {
+        popupMessages.scrollTop = popupMessages.scrollHeight;
+    }
+
+    // Save the messages to local storage
+    function saveMessages() {
+        localStorage.setItem('popupMessages', popupMessages.innerHTML);
+    }
+    // Get the current time in HH:MM:SS format
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    }
+</script>

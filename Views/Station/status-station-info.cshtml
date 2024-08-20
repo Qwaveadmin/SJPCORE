@@ -1,0 +1,333 @@
+﻿@{
+    ViewBag.Title = "ข้อมูลเสากระจายเสียง";
+    ViewBag.pTitle = "ข้อมูลเสากระจายเสียง";
+    ViewBag.pageTitle = "ข้อมูลเสากระจายเสียง";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<!-- jsvectormap css -->
+<link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<!-- Plugins css -->
+<link href="~/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css" />
+
+<!-- dropzone css -->
+<link rel="stylesheet" href="~/assets/libs/dropzone/dropzone.css" type="text/css" />
+
+<!-- Filepond css -->
+<link href="~/assets/libs/filepond/filepond.min.js" rel="stylesheet" type="text/css" />
+<link href="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css" rel="stylesheet" type="text/css" />
+
+<script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+<link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+
+
+<script>
+  $(document).ready(function() {
+    $('#volume_slider').on('input', function() {
+      $('#slider_value').text( $(this).val());
+    });
+  });
+</script>
+}
+@model StationModel
+
+<div class="row">
+
+
+
+    <div class="col-xxl-12">
+        <div class="card">
+            <div class="card-header">
+    
+                    <div class="float-start text-muted fs-20">เสากระจายเสียง : @Model.name</div>
+                    <a class="btn btn-outline-secondary btn-sm btn-label waves-effect waves-light float-end me-2" id="go-back-button"><i class="ri-arrow-go-back-line label-icon align-middle fs-16 me-2"></i> ย้อนกลับ</a>
+           
+                
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3" style="border-right: 3px solid #F2F7F9;">
+                        <div class="nav flex-column nav-pills text-center " id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">ข้อมูลทั่วไป</a>
+                            <a class="nav-link mb-2" id="v-pills-config-tab" data-bs-toggle="pill" href="#v-pills-config" role="tab" aria-controls="v-pills-config" aria-selected="true">ตั้งค่า Config</a>
+                           
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col-md-9">
+                        
+                        <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                            <div class="tab-pane fade active show" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+
+                                <h4 class="mx-1 my-2 text-primary">ตั้งค่าทั่วไป</h4>
+                                <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าข้อมูลทั่วไปได้ที่หน้านี้</label>
+                                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                                <div class="mb-3">
+                                    <label for="card-holder-input" class="form-label"><i class=" ri-volume-up-line text-muted me-1"></i><strong>ระดับเสียง</strong></label>
+                                    <div class="row align-items-center">
+                                        <div class="col-10">
+                                            <input type="range" class="form-range" min="0" max="100" id="volume_slider" value="@Model.vol">
+                                            <input type="hidden" id="key-station" value="@Model.key">
+                                        </div>
+                                        <div class="col-2">
+                                            <span>ระดับเสียง :</span> <span id="slider_value">@Model.vol</span>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Buttons Grid -->
+                                    <div class="d-grid gap-2 mt-2">
+                                        
+                                            <button type="submit" class="btn btn-primary btn-sm btn-label waves-effect right waves-light mt-2" id="save-volume"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล - ระดับเสียง</button>
+                                       
+                                    </div>
+                                    
+                                    
+                                </div>
+                                   <div class="mb-3">
+                                    <label for="card-holder-input" class="form-label"><i class=" ri-music-line text-muted me-1"></i><strong>ควบคุมเสียง</strong></label>
+
+                                    <div class="row">
+                                        <div class="col-4">
+                                        <div class="d-grid gap-2 mt-2">
+                                                <button type="button" class="btn btn-primary btn-sm btn-label waves-effect right waves-light mt-2" id="btn-stop-media"><i class=" ri-close-fill label-icon align-middle fs-16 ms-2"></i>หยุดเล่นเสียงทั้งหมด</button>
+
+                                            </div>
+                                        </div>
+                                         <div class="col-4"></div>
+                                        <div class="col-4"></div>
+                                    </div>
+                                    <!-- Buttons Grid -->
+
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent2">
+                            <div class="tab-pane fade " id="v-pills-config" role="tabpanel" aria-labelledby="v-pills-config-tab">
+
+                                
+                                <h4 class="mx-1 my-2 text-primary">ตั้งค่าคอนฟิกไฟล์</h4>
+                                <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าคอนฟิกไฟล์ในโหนดได้ที่หน้านี้</label>
+                                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+                                
+                                <div class="mb-3">
+                                    <label for="card-holder-input" class="form-label"><i class="  ri-file-list-3-line text-muted me-1"></i><strong>Config Json</strong></label>
+                                    <textarea class="form-control" id="json_config_text" rows="20"></textarea>
+
+
+                                    <!-- Buttons Grid -->
+                                    <div class="d-grid gap-2 mt-2">
+                                        <button type="submit" class="btn btn-primary btn-sm btn-label waves-effect right waves-light mt-2" id="save-config"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล - คอนฟิก</button>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                       
+                    </div><!--  end col -->
+                </div>
+                <!--end row-->
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+</div>
+@section scripts{
+    <script>
+        $('#btn-stop-media').click(function () {
+    var data = {
+        key: '@Model.key',
+        type_user: 'user',
+        type: 'media'
+    };
+
+    $.ajax({
+        type: 'POST',
+        url: '/station/stop',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(data),
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ..',
+                    text: response.message,
+                    timer: 3000
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    text: response.message,
+                    timer: 3000
+                });
+            }
+        },
+        error: function (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด...',
+                text: error.responseText,
+            });
+        }
+    });
+});
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#go-back-button').click(function (event) {
+                event.preventDefault(); // stop the link from being followed
+                goBack(); // custom function to go back
+            });
+        });
+
+        function goBack() {
+            // custom function to go back
+            history.back();
+        }
+    </script>
+    <script>
+        $('#save-config').click(function () {
+            var config = $('#json_config_text').val();
+            var key = $('#key-station').val();
+
+            // Validate that the config value is not empty
+            if (!config) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    text: 'กรุณากรอกข้อมูลคอนฟิก',
+                    timer: 3000,
+                });
+                return;
+            }
+            // Validate that the config value is valid JSON
+            try {
+                JSON.parse(config);
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    text: 'ข้อมูลคอนฟิกไม่ถูกต้อง กรุณาตรวจสอบให้แน่ใจว่าเป็น JSON ที่ถูกต้อง',
+                    timer: 3000,
+                });
+                return;
+            }
+            // Convert the configuration data to Base64
+            var base64Config = btoa(config);
+
+            var data = {
+                key: key,
+                base64json: base64Config
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/station/config",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000
+                        }).then(() => {
+
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        });
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    });
+                }
+            });
+        });
+    </script>
+        <script>
+            $('#save-volume').click(function () {
+                var volume = $('#volume_slider').val();
+                var type_user = 'user';
+                var key = $('#key-station').val();
+                var data = { vol: volume, type_user: type_user, key: key };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/station/vol",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ..',
+                                text: response.message,
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: response.message,
+                                timer: 3000,
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: error.responseText,
+                        });
+                    }
+                });
+            });
+    </script>
+
+
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<!-- range slider init -->
+<script src="~/assets/js/pages/range-sliders.init.js"></script>
+<script src="~/assets/js/pages/form-file-upload.init.js"></script>
+<!-- apexcharts init -->
+<script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+    <script src="~/assets/libs/dropzone/dropzone-min.js"></script>
+<!--Swiper slider js-->
+<script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+<!-- echarts js -->
+<script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+<!-- echarts init -->
+<script src="~/assets/js/pages/echarts.init.js"></script>
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

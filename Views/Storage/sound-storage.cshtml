@@ -1,0 +1,473 @@
+﻿@{
+    ViewBag.Title = "คลังจัดเก็บไฟล์เสียง";
+    ViewBag.pTitle = "คลังจัดเก็บไฟล์เสียง";
+    ViewBag.pageTitle = "คลังจัดเก็บไฟล์เสียง";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<StorageModel>
+
+@functions {
+    string bytesToEasyRead(long bytes)
+    {
+        try
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double bytesD = bytes;
+            int order = 0;
+            while (bytesD >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                bytesD = bytesD / 1024;
+            }
+            return String.Format("{0:0.##} {1}", bytesD, sizes[order]);
+        }
+        catch
+        {
+            return "0 MB";
+        }
+
+    }
+
+    string getAvg()
+    {
+        try
+        {
+            return @bytesToEasyRead((long)@Model.Average(a => long.Parse(a.size)));
+        }
+        catch
+        {
+            return "0";
+        }
+
+    }
+
+    string getTotal()
+    {
+        try
+        {
+            return @bytesToEasyRead(@Model.Sum(s => long.Parse(s.size)));
+        }
+        catch
+        {
+            return "0";
+        }
+
+    }
+}
+@section styles{
+    <!-- jsvectormap css -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- Sweet Alert css-->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Swiper slider css-->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- Plugins css -->
+    <link href="~/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css" />
+
+    <!-- dropzone css -->
+    <link rel="stylesheet" href="~/assets/libs/dropzone/dropzone.css" type="text/css" />
+
+    <!-- Filepond css -->
+    <link href="~/assets/libs/filepond/filepond.min.js" rel="stylesheet" type="text/css" />
+
+    <link href="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+
+    <script>
+
+        function bytesToEasyRead(bytes) {
+            if (bytes < 1024) {
+                return bytes + " bytes";
+            } else if (bytes < (1024 * 1024)) {
+                return (bytes / 1024).toFixed(2) + " KB";
+            } else if (bytes < (1024 * 1024 * 1024)) {
+                return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+            } else {
+                return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+            }
+        }
+        function deleteFile(id) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: 'คุณแน่ใจ?',
+                text: "หากลบไฟล์จะหายเเละไม่สามารถเรียกดูไฟล์นี้อีกได้!!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ตกลง, ลบมัน!',
+                cancelButtonText: 'ไม่, ยกเลิก!',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Storage/Delete?key=" + id,
+                        success: function (data) {
+                            if (data.success) {
+                                swalWithBootstrapButtons.fire(
+                                    'ลบสำเร็จ!',
+                                    data.message,
+                                    'success'
+                                )
+                                location.reload();
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                )
+                            }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            swalWithBootstrapButtons.fire(
+                                'Error!',
+                                xhr.status + ' ' + thrownError,
+                                'error'
+                            )
+                        }
+                    });
+                } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    swalWithBootstrapButtons.fire(
+                        'ยกเลิกสำเร็จ',
+                        'ไฟล์ยังคงอยู่ :)',
+                        'error'
+                    )
+                }
+            })
+        }
+
+
+        $(document).ready(function () {
+            $("form").on('submit', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: this.action,
+                    type: this.method,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (result) {
+                        if (result.success) {
+                            Swal.fire("Success", result.message, "success");
+                            location.reload();
+                        }
+                        else {
+                            Swal.fire("Error", result.message, "error");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card crm-widget">
+            <div class="card-body p-0">
+                <div class="row row-cols-md-3 row-cols-1">
+                    <div class="col col-lg border-end">
+                        <div class="py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนเสียงทั้งหมด
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-sound-module-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="@Model.Count()">0</span> เสียง</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนเสียงที่ถูกใช้งาน
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-volume-down-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="0">0</span> เสียง</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-md-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                จำนวนเสียงที่ไม่ถูกใช้งาน
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-volume-mute-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0"><span class="counter-value" data-target="0">0</span> เสียง</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg border-end">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                ขนาดไฟล์เฉลี่ย
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-file-copy-2-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0">@getAvg()</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col col-lg">
+                        <div class="mt-3 mt-lg-0 py-4 px-3">
+                            <h5 class="text-muted text-uppercase fs-13">
+                                รวมขนาดไฟล์ทั้งหมด
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class=" ri-folders-line display-6 text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h2 class="mb-0">@getTotal()</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div><!-- end row -->
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                        จัดการไฟล์
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn btn-warning btn-sm btn-label waves-effect waves-light float-end" data-bs-toggle="modal" data-bs-target="#firstmodal"><i class="ri-file-upload-line label-icon align-middle fs-16 me-2"></i> อัพโหลด</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+
+                                <th scope="col" style="width:100px" id="key">ไอดี</th>
+                                <th scope="col">ชื่อไฟล์</th>
+                                <th scope="col" style="width:100px">ขนาดไฟล์</th>
+                                <th scope="col" style="width:100px">อัพโหลดเมื่อ</th>
+                                <th scope="col" style="width:100px">สถานะ</th>
+                                <th scope="col" style="width:110px">แผงควบคุม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+
+</div>
+
+<!-- First modal dialog -->
+<div class="modal fade" id="firstmodal" aria-hidden="true" aria-labelledby="..." tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <h3>อัพโหลดไฟล์</h3>
+                        <div class="text-secondary mb-3">*รองรับไฟล์ MP3 เเละ WAV เท่านั้น</div>
+
+                        <form method="post" action="@Url.Action("Sound","Storage")" enctype="multipart/form-data">
+
+
+                            <input class="form-control" id="file" name="file" type="file" multiple>
+                            <input class="form-control" id="category" name="category" value="music" type="hidden">
+
+                            <!-- Buttons Grid -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary mt-3 "><i class="  ri-file-upload-line label-icon align-middle fs-16 me-2 "></i>อัพโหลด</button>
+                            </div>
+
+                        </form>
+
+                    </div> <!-- end col -->
+                </div>
+                <!-- end row -->
+
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts{
+
+
+    <script>
+        $.ajax({
+            type: "GET",
+            url: "/storage/soundlist",
+            dataType: "json",
+            success: function (response) {
+                if (response.success) {
+                    var data = response.data;
+                    for (var i = 0; i < data.length; i++) {
+                        var id = data[i].key;
+                        var name_defualt = data[i].name_defualt;
+                        var upload_by = bytesToEasyRead(data[i].size);
+                        var update_at = data[i].update_at;
+                        var status = data[i].status;
+
+                        var tr = '<tr>' +
+                            '<td>' +
+                            '<a class="fw-semibold">' + id + '</a>' +
+                            '</td>' +
+                            '<td>' + name_defualt + '</td>' +
+                            '<td>' + upload_by + '</td>' +
+                            '<td>' + update_at + '</td>' +
+                            '<td>' +
+                            '<span class="badge badge-soft-danger">ไม่ถูกใช้งาน</span>' +
+                            '</td>' +
+                            '<td>' +
+                            '<a class="btn btn-sm btn-outline-success me-2" href="@Url.Action("Download","Storage")' + '?key=' + id + ' ">' +
+                            '<i class=" ri-download-2-line label-icon align-middle fs-16 me-2"></i>' +
+                            'ดาวน์โหลด' +
+                            '</a>' +
+                            '<button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="toggleAudioPlayback(\'' + id + '\')">' +
+                            '<i id="play-pause-icon-' + id + '" class="ri-play-circle-line label-icon align-middle fs-16 me-2"></i>' +
+                            '<span id="play-pause-text-' + id + '">เล่นเสียง</span>' +
+                            '</button>' +
+                            '<button type="button" class="btn btn-sm btn-danger" onclick="deleteFile(\'' + id + '\')">' +
+                            '<i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2"></i>' +
+                            'ลบไฟล์' +
+                            '</button>' +
+                            '</td>' +
+                            '</tr>';
+
+                        $('table tbody').append(tr);
+                    }
+                } else {
+                    Swal.fire("Error", response.message, "error ");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr.responseText);
+            }
+        });
+    </script>
+    <script>
+        const audio = new Audio();
+        let isPlaying = false;
+        let currentKey = null;
+
+        function toggleAudioPlayback(key) {
+            const iconKey = document.getElementById('play-pause-icon-' + key);
+            const textKey = document.getElementById('play-pause-text-' + key);
+
+            if (currentKey !== null && currentKey !== key) {
+                audio.pause();
+                document.getElementById('play-pause-icon-' + currentKey).classList.remove('ri-pause-circle-line');
+                document.getElementById('play-pause-icon-' + currentKey).classList.add('ri-play-circle-line');
+                document.getElementById('play-pause-text-' + currentKey).innerText = 'เล่นเสียง';
+                currentKey = null;
+            };
+
+            if (isPlaying && currentKey == key) {
+                audio.pause();
+                isPlaying = false;
+                iconKey.classList.remove('ri-pause-circle-line');
+                iconKey.classList.add('ri-play-circle-line');
+                textKey.innerText = 'เล่นเสียง';
+
+            } else {
+                currentKey = key
+                audio.src = "/Storage/Download?key=" + key;
+                audio.play();
+                isPlaying = true;
+                iconKey.classList.remove('ri-play-circle-line');
+                iconKey.classList.add('ri-pause-circle-line');
+                textKey.innerText = 'หยุดเล่น';
+            }
+
+            audio.addEventListener('ended', function () {
+                isPlaying = false;
+                iconKey.classList.remove('ri-pause-circle-line');
+                iconKey.classList.add('ri-play-circle-line');
+                textKey.innerText = 'เล่นเสียง';
+            });
+        }
+    </script>
+    <!-- apexcharts -->
+    <script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+    <!-- Sweet Alerts js -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- Vector map-->
+    <script src="~/assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+    <script src="~/assets/libs/jsvectormap/maps/world-merc.js"></script>
+    <script src="~/assets/libs/jsvectormap/maps/thailand.js"></script>
+
+    <!-- filepond js -->
+    <script src="~/assets/libs/filepond/filepond.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
+    <script src="~/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+
+    <script src="~/assets/js/pages/form-file-upload.init.js"></script>
+    <!-- apexcharts init -->
+    <script src="~/assets/js/pages/apexcharts-column.init.js"></script>
+    <script src="~/assets/libs/dropzone/dropzone-min.js"></script>
+    <!--Swiper slider js-->
+    <script src="~/assets/libs/swiper/swiper-bundle.min.js"></script>
+
+    <!-- echarts js -->
+    <script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+    <!-- echarts init -->
+    <script src="~/assets/js/pages/echarts.init.js"></script>
+
+    <!-- Dashboard init -->
+    <script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+}

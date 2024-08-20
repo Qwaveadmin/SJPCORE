@@ -1,0 +1,126 @@
+﻿<!-- ========== App Menu ========== -->
+<div class="app-menu navbar-menu">
+    <!-- LOGO -->
+    <div class="navbar-brand-box">
+        <!-- Dark Logo-->
+        <a href="@Url.Action("Menu", "Dashboard")" class="logo logo-dark mt-3">
+            <span class="logo-sm">
+                <img src="~/assets/images/logo-sm.png" alt="" height="40">
+            </span>
+            <span class="logo-lg ">
+                <img src="~/assets/images/logo-dark.png" alt="" height="40">
+            </span>
+        </a>
+        <!-- Light Logo-->
+        <a href="@Url.Action("Menu", "Dashboard")" class="logo logo-light mt-3">
+            <span class="logo-sm">
+                <img src="~/assets/images/logo-sm.png" alt="" height="40">
+            </span>
+            <span class="logo-lg ">
+                <img src="~/assets/images/logo-light.png" alt="" height="40">
+            </span>
+        </a>
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+            <i class="ri-record-circle-line"></i>
+        </button>
+    </div>
+
+    <div id="scrollbar">
+        <div class="container-fluid">
+
+            <div id="two-column-menu">
+            </div>
+            <ul class="navbar-nav" id="navbar-nav">
+
+                <li class="menu-title fs-13"><span data-key="t-menu">การประกาศ</span></li>
+                    <a class="nav-link menu-link" href="@Url.Action("Broadcast", "Station").ToLower()" role="button">
+                        <i class="ri  ri-user-voice-line"></i> <span data-key="t-dashboards">ประกาศเสียงตามสาย</span>
+                    </a>        
+                    <a class="nav-link menu-link" href="@Url.Content("/Station/Schedule").ToLower()" role="button">
+                        <i class="ri ri-calendar-event-line"></i> <span data-key="t-dashboards">กำหนดการ</span>
+                    </a>
+                
+
+
+                <li class="menu-title fs-13"><span data-key="t-menu">สถานีกระจายเสียง</span></li>
+                    <a class="nav-link menu-link" href="@Url.Action("Status", "Station").ToLower()" role="button">
+                        <i class="ri  ri-base-station-line"></i> <span data-key="t-dashboards">สถานะสถานี</span>
+                    </a>
+
+                    <a class="nav-link menu-link" href="@Url.Action("Group", "Station").ToLower()" role="button">
+                        <i class="ri ri-layout-grid-line"></i> <span data-key="t-dashboards">ระบบแบ่งกลุ่ม</span>
+                    </a>
+
+
+                <li class="menu-title fs-13" ><span data-key="t-menu">เครื่องมือ</span></li>
+
+                    <a class="nav-link menu-link" href="@Url.Action("Sound", "Storage").ToLower()" role="button">
+                        <i data-feather="cloud-rain" class="icon-dual"></i> <span data-key="t-dashboards">คลังจัดเก็บไฟล์เสียง</span>
+                    </a>
+                    
+
+                @* <li class="nav-item">
+
+                   <a class="nav-link menu-link" href="@Url.Action("Tts", "Tools").ToLower()" role="button">
+                        <i class="ri ri-wechat-2-line"></i> <span data-key="t-dashboards">(TTS) Text to Speech</span>
+                    </a>
+                    
+                </li> *@
+
+
+                    <a class="nav-link menu-link" href="@Url.Action("YtPlayer", "Tools").ToLower()" role="button">
+                        <i class="ri ri-youtube-line"></i> <span data-key="t-dashboards">Youtube Player</span>
+                    </a>
+                    
+
+                    <a class="nav-link menu-link" href="@Url.Action("FmPlayer", "Tools").ToLower()" role="button">
+                        <i class="ri ri-broadcast-line"></i> <span data-key="t-dashboards">FM Radio Player</span>
+                    </a>
+                    
+
+                    <a class="nav-link menu-link" href="@Url.Action("Test", "Tools").ToLower()" role="button">
+                        <i class="ri ri-mic-line"></i> <span data-key="t-dashboards">บันทึกไฟล์เสียง</span>
+                    </a>
+                    
+
+
+
+
+                
+                @if (SJPCORE.Util.HTMLHelper.IsAdmin(Context))
+                {
+                    <li class="menu-title fs-13"><span data-key="t-menu">ผู้ดูเเลระบบ</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#usermanage" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarDashboards">
+                            <i class="ri ri-user-line"></i> <span data-key="t-dashboards">จัดการผู้ใช้งาน</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="usermanage">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Manage", "Account").ToLower()" class="nav-link" data-key="t-analytics"> ผู้ใช้งาน</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <a class="nav-link menu-link" href="@Url.Action("Server", "Status").ToLower()" role="button">
+                        <i class="ri  ri-server-line"></i> <span data-key="t-dashboards">MQTT Broker</span>
+                    </a>
+                    
+                    <a class="nav-link menu-link" href="@Url.Action("Website", "Settings").ToLower()" role="button">
+                        <i class="ri ri-settings-3-line"></i> <span data-key="t-dashboards">ตั้งค่า</span>
+                    </a>
+                    
+              
+                }
+            
+ 
+            </ul>
+        </div>
+        <!-- Sidebar -->
+    </div>
+</div>
+<!-- Left Sidebar End -->
+<!-- Vertical Overlay-->
+<div class="vertical-overlay"></div>

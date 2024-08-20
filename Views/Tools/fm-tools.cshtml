@@ -1,0 +1,327 @@
+﻿@{
+    ViewBag.Title = "FM Radio Player";
+    ViewBag.pTitle = "FM Radio Player";
+    ViewBag.pageTitle = "FM Radio Player";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<RadioModel>
+
+@section styles{
+
+    <!-- gridjs css -->
+    <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css">
+    <!-- Sweet Alert css-->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    
+        <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 0;
+        }
+
+            .table td:hover {
+                max-width: none;
+                overflow: visible;
+                white-space: normal;
+                z-index: 9999;
+                position: relative;
+                background-color: #fff;
+                color: #000;
+                font-weight: bold;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                border-radius: 5px;
+            }
+    </style>
+}
+
+<h2 class="text-center text-dark mt-3 mb-3">FM Radio Player - เครื่องเล่นเเละทดสอบสถานีวิทยุออนไลน์</h2>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                เพิ่ม URL สถานีวิทยุออนไลน์
+            </div>
+            <div class="card-body">
+                <div>
+                    <label for="exampleFormControlTextarea5" class="form-label fw-bold">
+                        ชื่อสถานี
+                    </label>
+                    <input type="url" class="form-control" id="NameRadio">
+                    <label for="exampleFormControlTextarea5" class="form-label fw-bold">
+                        URL สถานีวิทยุออนไลน์
+                    </label>
+                    <input type="url" class="form-control" id="UrlRadio">
+
+                    <div class="d-grid gap-2 mt-3">
+                       
+                        <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="addUrl" onclick="addUrl()"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>เพิ่ม URL</button>
+                    </div>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header text-muted fw-bold">
+                <div class="row">
+                    <div class="col-6 fs-15">
+                        จัดการ URL สถานีวิทยุออนไลน์
+                    </div>
+                    <div class="col-6">
+                        <input type="text" class="form-control" placeholder="ค้นหาสถานี" onkeyup="filterTable(this)">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+
+
+                <div class="table-responsive table-card" >
+                    <table class="table table-nowrap mb-0" >
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width:320px">แผงควบคุม</th>
+                                <th scope="col">ชื่อสถานี</th>
+                                <th scope="col">URL</th>
+                                <th scope="col">สร้างเมื่อ</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach(var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="playFm('@item.url')">
+                                            <i id="play-pause-icon-@item.url" class=" ri-play-circle-line label-icon align-middle fs-16 me-2"></i>
+                                            <span id="play-pause-text-@item.url">เล่นเสียง</span>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteStation('@item.id')"><i class=" ri-delete-bin-6-line label-icon align-middle fs-16 me-2"></i>ลบ URL</button>
+                                    </td>
+                                    <td>@item.name</td>
+                                    <td><a href="@item.url">@item.url</a></td>
+                                    <td>@item.create_at</td>
+
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+
+</div>
+
+@section scripts{
+
+    <script>
+        function filterTable(input) {
+            // Declare variables
+            var filter = input.value.toUpperCase();
+            var table = document.querySelector(".table");
+            var rows = table.getElementsByTagName("tr");
+
+            // Loop through all table rows, and hide those that don't match the search query
+            for (var i = 0; i < rows.length; i++) {
+                var name = rows[i].cells[1].textContent.toUpperCase(); // Use column 1 for filtering (name)
+                if (name.includes(filter)) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
+    <script>
+        const audio = new Audio();
+        let isPlaying = false;
+        let currentUrl = null;
+
+        function playFm(url) {
+            const iconUrl = document.getElementById('play-pause-icon-' + url);
+            const textUrl = document.getElementById('play-pause-text-' + url);
+
+            if (currentUrl !== null && currentUrl !== url) {
+                audio.pause();
+                document.getElementById('play-pause-icon-' + currentUrl).classList.remove('ri-pause-circle-line');
+                document.getElementById('play-pause-icon-' + currentUrl).classList.add('ri-play-circle-line');
+                document.getElementById('play-pause-text-' + currentUrl).innerText = 'เล่นเสียง';
+                currentUrl = null;
+            };
+
+            if (isPlaying && currentUrl == url) {
+                audio.pause();
+                isPlaying = false;
+                iconUrl.classList.remove('ri-pause-circle-line');
+                iconUrl.classList.add('ri-play-circle-line');
+                textUrl.innerText = 'เล่นเสียง';
+
+            } else {
+                currentUrl = url;
+                audio.src = url;
+                audio.play();
+                isPlaying = true;
+                iconUrl.classList.remove('ri-play-circle-line');
+                iconUrl.classList.add('ri-pause-circle-line');
+                textUrl.innerText = 'หยุดเล่น';
+            }
+
+            audio.addEventListener('ended', function () {
+                isPlaying = false;
+                iconUrl.classList.remove('ri-pause-circle-line');
+                iconUrl.classList.add('ri-play-circle-line');
+                textUrl.innerText = 'เล่นเสียง';
+            });
+        }
+    </script>
+
+    <script>
+
+
+        function deleteStation(id) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: 'คุณแน่ใจ?',
+                text: "หากลบสถานีวิทยุจะหายเเละไม่สามารถเรียกสถานีวิทยุนี้อีกได้!!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ตกลง, ลบมัน!',
+                cancelButtonText: 'ไม่, ยกเลิก!',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "DELETE",
+                        url: "/tools/fmplayer?id=" + id,
+                        success: function (data) {
+                            if (data.success) {
+                                swalWithBootstrapButtons.fire({
+                                    icon: 'success',
+                                    title: 'ลบสำเร็จ',
+                                    text: data.message,
+                                    timer: 3000,
+                                    onClose: () => location.reload()
+                                }).then(() => {
+                                    location.reload()
+                                })
+                         
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                )
+                            }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            swalWithBootstrapButtons.fire(
+                                'Error!',
+                                xhr.status + ' ' + thrownError,
+                                'error'
+                            )
+                        }
+                    });
+                } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    swalWithBootstrapButtons.fire(
+                        'ยกเลิกสำเร็จ',
+                        'URL สถานีวิทยุยังคงอยู่ :)',
+                        'error'
+                    )
+                }
+            })
+        }
+        // Function to send the POST request to the backend
+    function addUrl() {
+      // Get the value of the input field
+      let url = $("#UrlRadio").val();
+      let name = $("#NameRadio").val();
+    
+      if (!url) {
+        // Show an alert if the URL input field is empty
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด...',
+          text: 'โปรดระบุ URL สถานีวิทยุครับ!',
+        })
+      } else {
+        // Create a JavaScript object to send to the backend
+        let body = {
+          url: url,
+          name:name
+        }
+        $.ajax({
+          type: "POST",
+          url: "/tools/fmplayer",
+          data: JSON.stringify(body),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: function (response) {
+              if(response.success){
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'เพิ่มสถานีวิทยุสำเร็จ...',
+                      text: 'โปรดระบุ URL สถานีวิทยุครับ!',
+                                timer: 3000,
+                                onClose: () => location.reload()
+                            }).then(() => {
+                                location.reload()
+                            })
+
+              }else{
+                  Swal.fire({
+                  icon: 'error',
+                  title: 'เกิดข้อผิดพลาด!!',
+                  text: response.message,
+              })
+              }
+
+
+          },
+          error: function (xhr, status, error) {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'เกิดข้อผิดพลาด...',
+                  text: xhr.responseText,
+              })
+          }
+        });
+      }
+    }
+
+    </script>
+
+        <!-- prismjs plugin -->
+    <script src="~/assets/libs/prismjs/prism.js"></script>
+
+    <!-- gridjs js -->
+    <script src="~/assets/libs/gridjs/gridjs.umd.js"></script>
+    <!-- Sweet Alerts js -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+        <!-- gridjs init -->
+    <script src="~/assets/js/pages/gridjs.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}

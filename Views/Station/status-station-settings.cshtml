@@ -1,0 +1,238 @@
+﻿@{
+    ViewBag.Title = "ตั้งค่าเสากระจายเสียง";
+    ViewBag.pTitle = "ตั้งค่าเสากระจายเสียง";
+    ViewBag.pageTitle = "ตั้งค่าเสากระจายเสียง";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+}
+
+@model StationModel
+<div class="row">
+
+    
+
+    <div class="col-xxl-12">
+        <div class="card">
+            <div class="card-header">  <div class="float-start text-muted fs-20">เสากระจายเสียง : @Model.name</div> <a class="btn btn-outline-secondary btn-sm btn-label waves-effect waves-light float-end me-2" id="go-back-button"><i class="ri-arrow-go-back-line label-icon align-middle fs-16 me-2"></i> ย้อนกลับ</a></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3" style="border-right: 3px solid #F2F7F9;">
+                        <div class="nav flex-column nav-pills text-center " id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">ข้อมูลทั่วไป</a>
+                            <a class="nav-link mb-2" id="v-pills-home-del" data-bs-toggle="pill" href="#v-pills-del" role="tab" aria-controls="v-pills-home" aria-selected="true">ลบข้อมูล</a>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col-md-9">
+                        <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                            <div class="tab-pane fade active show" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+
+                                <h4 class="mx-1 my-2 text-primary">ตั้งค่าทั่วไป</h4>
+                                <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าข้อมูลทั่วไปได้ที่หน้านี้</label>
+                                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                                <div class="mb-3">
+                                    <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>ชื่อเสา</strong></label>
+                                    <input type="text" class="form-control" id="station-name" placeholder="ชื่อเสา" value="@Model.name" >
+                                </div>
+                                <div class="mb-3">
+                                    <label for="card-holder-input" class="form-label"><i class=" ri-edit-line text-muted me-1"></i><strong>รายละเอียด</strong></label>
+                                    <input type="text" class="form-control" id="station-description" placeholder="รายละเอียด" value="@Model.description" >
+                                </div>
+
+                               
+                                <!-- Buttons with Label Right -->
+                                <button type="submit" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="save-station"><i class="ri-save-line label-icon align-middle fs-16 ms-2"></i>บันทึกข้อมูล</button>
+
+                            </div>
+                        </div>
+
+                        <div class="tab-content text-muted mt-4 mt-md-0" id="v-pills-tabContent">
+                            <div class="tab-pane fade " id="v-pills-del" role="tabpanel" aria-labelledby="v-pills-home-tab">
+                                
+                                <h4 class="mx-1 my-2 text-primary">ลบข้อมูล</h4>
+                                <label class="mx-2 text-muted font-weight-normal">คุณสามารถลบข้อมูลได้ที่หน้านี้</label>
+                                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+                                <h5 class="text-dark">
+                                    เสากระจายเสียง : @Model.name
+                                </h5>
+                                <p class="text-muted">
+                                    หากท่านต้องการลบ เสากระจายเสียง นี้โปรดใส่รหัสผ่านเเละกดปุ่ม <strong class="text-danger">ทั้งนี้หากลบเสาสัญญาณจะไม่สามารถกู้คืนได้</strong>
+                                </p>
+                                <div>
+                                    <input type="text" class="form-control" id="verify-to-delete"
+                                           placeholder="โปรดกรอกคำว่า 'ยืนยัน'"
+                                           style="max-width: 265px;">
+                                </div>
+                                <div class="hstack gap-2 mt-3">
+                                    <!-- Buttons with Label Right -->
+                                    <button type="submit" class="btn btn-danger btn-label waves-effect right waves-light mt-2" id="deleteStationBtn"><i class=" ri-delete-bin-6-line label-icon align-middle fs-16 ms-2"></i>ลบข้อมูล</button>
+                                </div>
+
+                             
+
+                            </div>
+                        </div>
+                    </div><!--  end col -->
+                </div>
+                <!--end row-->
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+</div>
+
+
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $('#go-back-button').click(function (event) {
+                event.preventDefault(); // stop the link from being followed
+                goBack(); // custom function to go back
+            });
+        });
+
+        function goBack() {
+            // custom function to go back
+            history.back();
+        }
+    </script>
+
+    <script>
+        document.getElementById("save-station").addEventListener("click", function () {
+
+            const station_name = document.getElementById("station-name").value;
+            const station_description = document.getElementById("station-description").value;
+            const station_key = "@Model.key";
+
+            // Validate input
+            const errors = [];
+            if (!station_name) {
+                errors.push("กรุณากรอกชื่อเสา");
+            }
+
+            if (errors.length > 0) {
+                const errorHtml = errors.map(error => `<li>${error}</li>`).join("");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    html: `กรุณาแก้ไขข้อผิดพลาดต่อไปนี้<ul>${errorHtml}</ul>`,
+                });
+                return; // Stop the function if there are errors
+            }
+
+            const data = {
+                name: station_name,
+                description: station_description
+            };
+
+            $.ajax({
+                type: "POST",
+                url: `/station/update/${station_key}`,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ...',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => location.reload()
+                        }).then(() => {
+                            location.reload()
+                        })
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
+                            timer: 3000,
+                        })
+                    }
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
+                    })
+                }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            // Attach a click event handler to the delete button
+            $('#deleteStationBtn').click(function (e) {
+                e.preventDefault();
+
+                // Get the value of the password and verification input fields
+                var password = $('#verify-to-delete').val();
+                var verify = 'ยืนยัน';
+
+                // Check if the verification text matches the input text
+                if (password.trim().toLowerCase() !== verify.trim().toLowerCase()) {
+                    // Show an error message and return
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: 'โปรดกรอกคำว่า "ยืนยัน" เพื่อยืนยันการลบข้อมูล',
+                        timer: 3000,
+                    });
+                    return;
+                }
+
+                // Send an AJAX request to the delete API endpoint
+                $.ajax({
+                    type: "DELETE",
+                    url: "/station/del/@Model.key",
+                    data: { password: password },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ..',
+                                text: response.message,
+                                timer: 3000
+                            }).then(() => {
+                                // Redirect the user to the station list page
+                                window.location.href = '/station/status';
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: response.message,
+                                timer: 3000,
+                            });
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: error.responseText,
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+ <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<!-- echarts js -->
+<script src="~/assets/libs/echarts/echarts.min.js"></script>
+
+<!-- echarts init -->
+<script src="~/assets/js/pages/echarts.init.js"></script>
+
+<!-- Dashboard init -->
+<script src="~/assets/js/pages/dashboard-ecommerce.init.js"></script>
+
+<!-- App js -->
+<script src="~/assets/js/app.js"></script>
+}
