@@ -68,6 +68,7 @@ public IActionResult SignIn([FromBody] LoginModel model)
         {
             // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
             var result = _client.PostAsync("https://demo.sjpradio.cloud/api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
+            Console.WriteLine(result.StatusCode);
             if (result.IsSuccessStatusCode)
             {
                 var data = result.Content.ReadAsStringAsync().Result;
@@ -116,12 +117,41 @@ public IActionResult SignIn([FromBody] LoginModel model)
                 }
                 else
                 {
-                    return Ok(new { success = false, msg = response.Error });
+                    return Ok(new { success = false, msg = response.Error + " กรุณาติดต่อผู้ดูแลระบบ.." });
                 }
             }
             else
             {
-                return Ok(new { success = false, msg = "ไม่สามารถเชื่อมต่อกับระบบหลักได้.." });
+                // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
+                using (var connection = _context.CreateConnection())
+                {
+                    var userlist = connection.GetList<UserModel>().ToList();
+                    if (userlist.Any())
+                    {
+                        var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
+                        if (user != null)
+                        {
+                            if (VerifyPassword(model.Password, user.Password, GlobalParameter.Config.Where(w => w.key == "SECRETKEY").FirstOrDefault().value))
+                            {
+                                Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
+                                Response.Cookies.Append("U", user.Username);
+                                return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
+                            }
+                            else
+                            {
+                                return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
+                            }
+                        }
+                        else
+                        {
+                            return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
+                        }
+                    }
+                    else
+                    {
+                        return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
+                    }
+                }
             }
         }
         catch (Exception ex)
