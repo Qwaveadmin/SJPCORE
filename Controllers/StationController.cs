@@ -1390,19 +1390,19 @@ namespace SJPCORE.Controllers
 
                         if (IsPlaying.Count() > 0)
                         {
-                            Console.WriteLine("IsPlaying ; " + IsPlaying.Count());
+                            // Console.WriteLine("IsPlaying ; " + IsPlaying.Count());
                             foreach (var item in IsPlaying)
                             {       
-                                Console.WriteLine(item.key + " start : " + item.schtime.ToString() + " end : " + item.schtime.Value.AddMinutes((double)item.duration).ToString() );   
+                                // Console.WriteLine(item.key + " start : " + item.schtime.ToString() + " end : " + item.schtime.Value.AddMinutes((double)item.duration).ToString() );   
                             }                            
                         }
 
                         if (IsPending.Count() > 0)
                         {
-                            Console.WriteLine("IsPending ; " + IsPending.Count());
+                            // Console.WriteLine("IsPending : " + IsPending.Count());
                             foreach (var item in IsPending)
                             {       
-                                Console.WriteLine(item.key + " start : " + item.schtime.ToString() + " end : " + item.schtime.Value.AddMinutes((double)item.duration).ToString() );   
+                                // Console.WriteLine(item.key + " start : " + item.schtime.ToString() + " end : " + item.schtime.Value.AddMinutes((double)item.duration).ToString() );   
                             }                            
                         }
                     }
