@@ -102,7 +102,7 @@ public IActionResult SignIn([FromBody] LoginModel model)
                                 }
                                 else
                                 {
-                                    connection.Execute("INSERT INTO sjp_user (id, username, password, role) VALUES (@id, @username, @password, @role)", new { id = user.Id, username = user.Username, password = user.Password, role = user.Role });
+                                    connection.Execute("INSERT INTO sjp_user (username, password, role) VALUES (@username, @password, @role)", new {username = user.Username, password = user.Password, role = user.Role });
                                 }
                             }
                             Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
@@ -156,36 +156,7 @@ public IActionResult SignIn([FromBody] LoginModel model)
         }
         catch (Exception ex)
         {
-            // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
-            using (var connection = _context.CreateConnection())
-            {
-                var userlist = connection.GetList<UserModel>().ToList();
-                if (userlist.Any())
-                {
-                    var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
-                    if (user != null)
-                    {
-                        if (VerifyPassword(model.Password, user.Password, GlobalParameter.Config.Where(w => w.key == "SECRETKEY").FirstOrDefault().value))
-                        {
-                            Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
-                            Response.Cookies.Append("U", user.Username);
-                            return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
-                        }
-                        else
-                        {
-                            return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
-                        }
-                    }
-                    else
-                    {
-                        return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
-                    }
-                }
-                else
-                {
-                    return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
-                }
-            }
+            return Ok(new { success = false, msg = ex.Message });
         }
     }
     else

@@ -5,6 +5,7 @@ using System.Threading;
 using System;
 using SJPCORE.Controllers;
 using System.Diagnostics;
+using Dapper;
 
 namespace SJPCORE
 {
@@ -23,6 +24,8 @@ namespace SJPCORE
             var url = "http://localhost:5000";
             OpenBrowser(url);
             host.Run();
+
+
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

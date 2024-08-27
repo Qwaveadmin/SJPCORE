@@ -24,9 +24,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Collections;
 using System.Threading;
 using Dapper.Contrib.Extensions;
-using static Slapper.AutoMapper;
 using SJPCORE.Models.Mqtt;
-using AngleSharp.Css;
 
 namespace SJPCORE.Controllers
 {

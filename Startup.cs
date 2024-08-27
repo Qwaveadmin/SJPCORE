@@ -15,6 +15,7 @@ using SJPCORE.Models.Attribute;
 using System.Linq;
 using SJPCORE.Util;
 using SJPCORE.Models.Interface;
+using System.Collections.Generic;
 
 namespace SJPCORE
 {
@@ -28,7 +29,7 @@ namespace SJPCORE
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public async void ConfigureServices(IServiceCollection services)
         {
             services.AddCors(options =>
             {
@@ -43,6 +44,7 @@ namespace SJPCORE
             services.AddTransient<AppDbContext>();
             services.AddTransient<PassParam>();
             services.AddSingleton<DapperContext>();
+            await DatabaseInitializer.InitializeDatabaseAsync(services.BuildServiceProvider().GetService<DapperContext>());
             services.AddSingleton<AppDbContext>();
             services.AddSingleton<PassParam>();
 
@@ -75,6 +77,7 @@ namespace SJPCORE
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, MQTTController mqttController, DapperContext context)
         {
+            
             GlobalParameter.Config = context.GetConfig();
 
             if (env.IsDevelopment())
