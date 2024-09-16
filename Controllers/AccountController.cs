@@ -67,7 +67,7 @@ public IActionResult SignIn([FromBody] LoginModel model)
         try
         {
             // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
-            var result = _client.PostAsync("https://demo.sjpradio.cloud/api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
+            var result = _client.PostAsync("https://sjp-sound.qwave.cloud/api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
             Console.WriteLine(result.StatusCode);
             if (result.IsSuccessStatusCode)
             {

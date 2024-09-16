@@ -18,12 +18,14 @@ namespace SJPCORE.Util
     {
         private readonly ILogger<EMQXClientService> _logger;
         private readonly IHubContext<ChatHub> _hubContext;
+        private readonly DapperContext _context;
         private IMqttClient _mqttClient;
 
-        public EMQXClientService(ILogger<EMQXClientService> logger, IHubContext<ChatHub> hubContext)
+        public EMQXClientService(ILogger<EMQXClientService> logger, IHubContext<ChatHub> hubContext, DapperContext context)
         {
             _logger = logger;
             _hubContext = hubContext;
+            _context = context;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -58,9 +60,49 @@ namespace SJPCORE.Util
 
             _mqttClient.ApplicationMessageReceivedAsync += async e => {
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                await _hubContext.Clients.All.SendAsync("Signaling", payload);
-                // _logger.LogInformation($"Message received on topic {e.ApplicationMessage.Topic}: {payload}");
+                var messageobj = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(payload);
+                
+                _logger.LogInformation($"Message received on topic {e.ApplicationMessage.Topic}: {payload}");
+                // ตรวจสอบค่า 'type' ใน messageobj
+                if (messageobj.type == "Signaling")
+                {
+                    await _hubContext.Clients.All.SendAsync("Signaling", payload);
+                }
+                else if (messageobj.type == "schedule")
+                {
+                    _logger.LogInformation($"Received schedule message: {messageobj.action}");
+                    
+                    // แปลง action เป็น string อย่างชัดเจน
+                    string action = (string)messageobj.action;
+                    if (!string.IsNullOrEmpty(action))
+                    {
+                        switch (action.ToLower())
+                        {
+                            case "get": // ดึงข้อมูลตารางเวลา
+                                _logger.LogInformation("Getting schedule data...");
+                                using (var con = _context.CreateConnection())
+                                {
+                                    var schedules = con.GetList<ScheduleModel>();
+                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(schedules);
+                                    await PublishMessageAsync("response/" + site_id, json);
+                                }
+                                break;    
+                            default:
+                                _logger.LogWarning("Unknown action.");
+                                break;            
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Action is null or empty.");
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Unknown message type.");
+                }
             };
+
 
             while (!stoppingToken.IsCancellationRequested)
             {
