@@ -1,12 +1,4 @@
-﻿{
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:63959",
-      "sslPort": 44396
-    }
-  },
+{
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
@@ -17,11 +9,15 @@
     },
     "SJPCORE": {
       "commandName": "Project",
-      "launchBrowser": true,
-      "applicationUrl": "http://*:5000;",
-      "environmentVariables": {
-        //"ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      "applicationUrl": "http://*:5000;"
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:63959",
+      "sslPort": 44396
     }
   }
 }

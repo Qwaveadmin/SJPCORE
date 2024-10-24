@@ -83,8 +83,8 @@ namespace SJPCORE.Util
                                 using (var con = _context.CreateConnection())
                                 {
                                     var schedules = con.GetList<ScheduleModel>();
-                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(schedules);
-                                    await PublishMessageAsync("response/" + site_id, json);
+                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "schedule", action = "get", data = schedules});
+                                    await PublishMessageAsync("response", json);
                                 }
                                 break;    
                             default:
