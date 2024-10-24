@@ -23,6 +23,7 @@ namespace SJPCORE.Middleware
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
+
             if (context.Request.Path.StartsWithSegments("/rtc-mcu", StringComparison.OrdinalIgnoreCase))
             {
                 if (!context.Request.Headers.TryGetValue(CustomHeaderName, out var headerValue) || headerValue != CustomHeaderValue)

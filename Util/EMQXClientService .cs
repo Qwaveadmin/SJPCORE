@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using SJPCORE.Models;
+using SJPCORE.Controllers;
 
 namespace SJPCORE.Util
 {
@@ -82,7 +83,8 @@ namespace SJPCORE.Util
                                 _logger.LogInformation("Getting schedule data...");
                                 using (var con = _context.CreateConnection())
                                 {
-                                    var schedules = con.GetList<ScheduleModel>();
+                                    var scheduleController = new ScheduleController(_context);
+                                    var schedules = scheduleController.GetScheduleList(); // เรียกใช้ GetScheduleList
                                     var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "schedule", action = "get", data = schedules});
                                     await PublishMessageAsync("response", json);
                                 }
