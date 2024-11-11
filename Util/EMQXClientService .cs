@@ -12,6 +12,9 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using SJPCORE.Models;
 using SJPCORE.Controllers;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace SJPCORE.Util
 {
@@ -64,12 +67,9 @@ namespace SJPCORE.Util
                 var messageobj = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(payload);
                 
                 _logger.LogInformation($"Message received on topic {e.ApplicationMessage.Topic}: {payload}");
+                
                 // ตรวจสอบค่า 'type' ใน messageobj
-                if (messageobj.type == "Signaling")
-                {
-                    await _hubContext.Clients.All.SendAsync("Signaling", payload);
-                }
-                else if (messageobj.type == "schedule")
+                if (messageobj.type == "schedule")
                 {
                     _logger.LogInformation($"Received schedule message: {messageobj.action}");
                     
@@ -79,6 +79,34 @@ namespace SJPCORE.Util
                     {
                         switch (action.ToLower())
                         {
+                            case "post":
+                                _logger.LogInformation("Posting schedule data...");
+                                using (var con = _context.CreateConnection())
+                                {
+                                    try
+                                    {
+                                        _logger.LogInformation($"Body: {messageobj.body}");
+                                        string bodyString = Convert.ToString(messageobj.body);
+                                        _logger.LogInformation($"Body as string: {bodyString}");
+                                        var body = JsonConvert.DeserializeObject<AddScheduleRequest>(bodyString);
+                                        _logger.LogInformation($"Deserialized body: {body}");
+                                        
+                                        var scheduleController = new ScheduleController(_context);
+                                        _logger.LogInformation("Calling AddSchedule...");
+                                        var response = scheduleController.AddSchedule(body);
+                                        _logger.LogInformation($"AddSchedule response: {response}");
+                                        
+                                        _logger.LogInformation("Publishing response...");
+                                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { site_id = site_id, user = messageobj.user, type = "schedule", action = "post", data = response });
+                                        await PublishMessageAsync("response", json);
+                                        _logger.LogInformation("Published response.");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError($"Error during deserialization or AddSchedule call: {ex.Message}");
+                                    }
+                                }
+                                break;
                             case "get": // ดึงข้อมูลตารางเวลา
                                 _logger.LogInformation("Getting schedule data...");
                                 using (var con = _context.CreateConnection())
@@ -88,7 +116,36 @@ namespace SJPCORE.Util
                                     var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "schedule", action = "get", data = schedules});
                                     await PublishMessageAsync("response", json);
                                 }
-                                break;    
+                                break;
+                            case "get/station": // ดึงข้อมูลสถานี
+                                _logger.LogInformation("Getting station data...");
+                                using (var con = _context.CreateConnection())
+                                {
+                                    var scheduleController = new ScheduleController(_context);
+                                    var stations = scheduleController.GetStationList(); // เรียกใช้ GetStationList
+                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "schedule", action = "get/station", data = stations});
+                                    await PublishMessageAsync("response", json);
+                                }
+                                break;
+                            case "del" :
+                                _logger.LogInformation("Deleting schedule data...");
+                                using (var con = _context.CreateConnection())
+                                {
+                                    try
+                                    {
+                                    _logger.LogInformation($"Body: {messageobj.body}");
+                                    string bodyString = Convert.ToString(messageobj.body);
+                                    var response = ScheduleController.DeleteSchedule(bodyString);
+                                    _logger.LogInformation($"DeleteSchedule response: {response}");
+                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "schedule", action = "del", data = response});
+                                    await PublishMessageAsync("response", json);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError($"Error during deserialization or DeleteSchedule call: {ex.Message}");
+                                    }
+                                }
+                                break;
                             default:
                                 _logger.LogWarning("Unknown action.");
                                 break;            
@@ -99,6 +156,56 @@ namespace SJPCORE.Util
                         Console.WriteLine("Action is null or empty.");
                     }
                 }
+                else if (messageobj.type == "request")
+                {
+                    await _hubContext.Clients.All.SendAsync("Signaling", payload);
+                }
+                else if (messageobj.type == "soundList")
+                {
+                    _logger.LogInformation($"Received soundList message: {messageobj.action}");
+                    
+                    // แปลง action เป็น string อย่างชัดเจน
+                    string action = (string)messageobj.action;
+                    if (!string.IsNullOrEmpty(action))
+                    {
+                        switch (action.ToLower())
+                        {
+                            case "get": // ดึงข้อมูลตารางเวลา
+                                _logger.LogInformation("Getting soundList data...");
+                                try
+                                {
+                                    using (var con = _context.CreateConnection())
+                                    {
+                                        var list_sound = await con.GetListAsync<StorageModel>();
+                                        var list_yt = await con.GetListAsync<YtModel>();
+                                        var list_fm = await con.GetListAsync<RadioModel>();
+
+                                        var mergedList = new List<object>();
+                                        mergedList.AddRange(list_sound.Select(s => new { type = "storage", s.key, name = s.name_defualt }));
+                                        mergedList.AddRange(list_yt.Select(s => new { type = "youtube", key = s.id, name = s.name }));
+                                        mergedList.AddRange(list_fm.Select(s => new { type = "radio", key = s.id, name = s.name }));
+                                        var response = new { success = true, message = mergedList };
+
+                                        var json = Newtonsoft.Json.JsonConvert.SerializeObject( new { site_id = site_id, user = messageobj.user, type = "soundList", action = "get", data = response});
+                                        await PublishMessageAsync("response", json);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError($"Error while getting soundList data: {ex.Message}");
+                                }
+                                break;
+                            default:
+                                _logger.LogWarning("Unknown action.");
+                                break;            
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Action is null or empty.");
+                    }
+                }
+
                 else
                 {
                     _logger.LogWarning("Unknown message type.");

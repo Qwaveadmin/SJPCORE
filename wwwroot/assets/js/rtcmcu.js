@@ -1,4 +1,6 @@
 const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
+AgoraRTC.setLogLevel(3);
+
         let peerConnections = {};
         let remoteStreamsTrack = null;
         let numberofcandidate = {};
@@ -40,21 +42,18 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                 sendMessagetoCore("answer", answer, messageobj.user, `/sub/node`, messageobj.id);
             }
                 if (messageobj.type == "answer") {
-                    console.log("answer", messageobj.message);
-                    await peerConnections[messageobj.id].setRemoteDescription(messageobj.message);
+                    console.log("answer", messageobj);
+                    await peerConnections[messageobj.user].setRemoteDescription(messageobj.message);
                 }
                 if (messageobj.type == "candidate") {
-                    await peerConnections[messageobj.id].addIceCandidate(messageobj.message);
+                    await peerConnections[messageobj.user].addIceCandidate(messageobj.message);
                 }
             });
-
-
 
             srconnection.on('Signaling', async function (message) {
                 console.log("message-cloud", message);
                 const messageobj = JSON.parse(message);
                 if (messageobj.type == "request") {
-                    console.log("ควยเอ๊ยเย็ดแม่",client.connectionState);
                     if (client.connectionState == "DISCONNECTED") {
                         console.log("client join", options);
                         client.join(options.appid, options.channel, options.token, options.uid)
@@ -95,8 +94,6 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                     }
                 }
             })
-
-            console.log("โถ่ไอ้สัส มึงออกสิวะ");
 
             srconnection.start()
                 .then(() => {
@@ -176,7 +173,7 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                         if (event.candidate) {
                             numberofcandidate[key]++;
                             console.log("onicecandidate", numberofcandidate[key]);
-                            if (numberofcandidate[key] == 3) {
+                            if (numberofcandidate[key] == 2) {
                                 createOffer(user,key,vol);
                             }
                             sendMessagetoCore("candidate", event.candidate, user, '/sub/node', key);
@@ -187,11 +184,11 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                         console.log("oniceconnectionstatechange", peerConnections[key].iceConnectionState);
                         iceConnectionStateChangeTimers[key].hasEventOccurred = true;
                         if (peerConnections[key].iceConnectionState == "connected") {
-                            console.log("connected", key);
+                            console.log('%cConnected' + key, 'color: red; font-size: 20px;');
                             sendMessagetoCloud("connected", "connected", user, `rtcuser`, key);
                         }
                         if (peerConnections[key].iceConnectionState == "disconnected") {
-                            console.log("disconnected", key);
+                            console.log('%cDisconnected' + key, 'color: red; font-size: 20px;');
                             sendMessagetoCloud("disconnected", "disconnected", user, `rtcuser`, key);
                             delete numberofcandidate[key];
                             delete iceConnectionStateChangeTimers[key];       
@@ -202,7 +199,7 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                 }, 2000);
 
             } catch (error) {
-                console.log(error)
+                console.error("createPeerConnection", error);
             }
         }
 
@@ -250,6 +247,8 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
                 timer: setTimeout(() => {
                     if (!iceConnectionStateChangeTimers[key].hasEventOccurred) {
                         console.log("iceConnectionStateChangeTimer", key);
+                        console.log('%cTimeout' + key, 'color: red; font-size: 20px;');
+                        console.log(peerConnections[key].iceConnectionState);
                         delete peerConnections[key];
                         delete numberofcandidate[key];
                         delete iceConnectionStateChangeTimers[key];

@@ -11,7 +11,6 @@ namespace SJPCORE.Util
 {
     public class PuppeteerBackgroundService : BackgroundService
     {
-
         private readonly ILogger<PuppeteerBackgroundService> _logger;
         private readonly string _url;
 
@@ -19,7 +18,9 @@ namespace SJPCORE.Util
         {
             _logger = logger;
             _url = "http://localhost:5000/rtcmcu"; // URL ของแอปพลิเคชัน ASP.NET ของคุณ
+            _logger.LogInformation($"Puppeteer background service is running for URL: {_url}");
         }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var browserFetcher = new BrowserFetcher();
@@ -40,14 +41,23 @@ namespace SJPCORE.Util
                     {
                         _logger.LogInformation($"Browser console message: {e.Message.Text}");
                     };
-
+                    
                     // เพิ่ม HTTP Header เพื่อส่งข้อมูลรับรอง
                     await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
                     {
-                        { "X-Custom-Auth", "เย็ดหีแม่มึง" } // ต้องตรงกับค่าที่กำหนดใน Middleware
+                        { "X-Custom-Auth", "25c1e9bf-5136-4d61-ac93-651723bdf291" }, // ต้องตรงกับค่าที่กำหนดใน Middleware
+                        { "Authorization", "sutha" }, // เพิ่ม Header Authorization
+                        { "U", "wertring2" }
                     });
 
                     await page.GoToAsync(_url);
+
+                    // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
+                    await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
+
+                    // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
+                    await page.ClickAsync("body");
+                     
 
                     // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
                     await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
@@ -65,7 +75,5 @@ namespace SJPCORE.Util
 
             await base.StopAsync(cancellationToken);
         }
-
-        
     }
 }

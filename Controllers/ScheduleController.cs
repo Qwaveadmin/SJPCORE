@@ -150,6 +150,8 @@ namespace SJPCORE.Controllers
         [HttpPost]
         public IActionResult AddSchedule([FromBody] AddScheduleRequest schedule_req)
         {
+            Console.WriteLine("ควย");
+
             var schedule = new ScheduleModel();
 
             // Map form data to ScheduleModel properties

@@ -29,7 +29,7 @@ namespace SJPCORE.Util
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
-                .WithPayload("ควย")
+                .WithPayload(payload)
                 .WithRetainFlag()
                 .Build();
 

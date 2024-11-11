@@ -16,15 +16,16 @@ namespace SJPCORE.Middleware
     {
         private readonly RequestDelegate _next;
         private const string CustomHeaderName = "X-Custom-Auth";
-        private const string CustomHeaderValue = "เย็ดหีแม่มึง"; // กำหนดค่า Secret ที่ต้องการ
+        private const string CustomHeaderValue = "25c1e9bf-5136-4d61-ac93-651723bdf291"; // กำหนดค่า Secret ที่ต้องการ
         public AuthPassed()
         {
+            
         }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
 
-            if (context.Request.Path.StartsWithSegments("/rtc-mcu", StringComparison.OrdinalIgnoreCase))
+            if (context.Request.Path.StartsWithSegments("/rtcmcu", StringComparison.OrdinalIgnoreCase))
             {
                 if (!context.Request.Headers.TryGetValue(CustomHeaderName, out var headerValue) || headerValue != CustomHeaderValue)
                 {

@@ -1,0 +1,9 @@
+{
+    "workbench.colorCustomizations": {
+      "titleBar.activeBackground": "#8de8ff",  // เปลี่ยนเป็นสีที่ต้องการ
+      "titleBar.activeForeground": "#000000",  // สีของตัวอักษรใน title bar
+      "activityBar.background": "#202e31",     // สีของ activity bar (แถบด้านซ้าย)
+      "editor.background": "#000000"
+    }
+  }
+  

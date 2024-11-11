@@ -39,7 +39,7 @@ namespace SJPCORE.Models
             {
                 IEnumerable<(string key, string value, string grp, DateTime updateAt)> records = new List<(string key, string value, string grp, DateTime updateAt)>
                 {
-                    ("STATION_NAME", "สถานีกระจายเสียง : SJP Radio Broadcast", null, DateTime.MinValue),
+                    ("STATION_NAME", "สถานีกระจายเสียง : Site สำหรับทดสอบ", null, DateTime.MinValue),
                     ("FOOTER", "© NT. All rights reserved (V101.291022.001)", null, DateTime.MinValue),
                     ("CONFIG_MQTT_PORT", "1883", "MQTT", new DateTime(2023, 1, 20, 18, 20, 0)),
                     ("CONFIG_MQTT_USER", "QWAVE", "MQTT", new DateTime(2023, 1, 20, 18, 20, 0)),
@@ -47,7 +47,7 @@ namespace SJPCORE.Models
                     ("BANNER_NOTICE", "หากมีข้องสังสัยหรือมีปัญหาโปรดติดต่อ 062-641-9124", null, DateTime.MinValue),
                     ("DARKMODE", "0", null, DateTime.MinValue),
                     ("SLOGAN", "ระบบเสียงตามสายเเละกระจายเสียง", null, new DateTime(2024, 6, 5, 15, 24, 0)),
-                    ("EMQX_IP", "qwaveoffice.trueddns.com", "EMQX", new DateTime(2024, 5, 31, 13, 41, 0)),
+                    ("EMQX_IP", "qwaveoffice.trueddns.com", "EMQX", new DateTime(2024, 5, 31, 13, 41, 0)), 
                     ("EMQX_PORT", "12660", "EMQX", new DateTime(2024, 5, 31, 13, 54, 0)),
                     ("EMQX_USER", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
                     ("EMQX_PASS", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
@@ -57,7 +57,7 @@ namespace SJPCORE.Models
                     ("DATABASE_PASS", "Qwave@dmin020890751", "MySQL", new DateTime(2024, 6, 5, 14, 49, 0)),
                     ("DATABASE_NAME", "sjp_broadcastradio", "MySQL", new DateTime(2024, 6, 5, 14, 50, 0)),
                     ("SITE_ID", "9db3edbd-26d1-4d57-a72a-e39f02260eb5", null, new DateTime(2024, 6, 5, 15, 18, 0)),
-                    ("HOST_URL", "https://demo.sjpradio.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0)),
+                    ("HOST_URL", "https:sound-demo.qwave.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0)),
                     ("SECRETKEY", "19c103a0b278a71e9fdeac2c50284c71", null, new DateTime(2024, 6, 7, 14, 49, 0))
                 };
 

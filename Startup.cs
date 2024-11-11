@@ -52,7 +52,7 @@ namespace SJPCORE
             services.AddSingleton<AuthPassed>();
 
             services.AddScoped<ISecretKeyHelper, SecretKeyHelper>();
-            // services.AddHostedService<PuppeteerBackgroundService>();
+            services.AddHostedService<PuppeteerBackgroundService>();
             services.AddSingleton<EMQXClientService>(); // Add as singleton
             services.AddHostedService(provider => provider.GetRequiredService<EMQXClientService>());
             
