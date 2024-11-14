@@ -71,18 +71,18 @@ public IActionResult SignIn([FromBody] LoginModel model)
             // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
             var result = _client.PostAsync($"{host}api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
             Console.WriteLine(result.StatusCode);
-            if (result.IsSuccessStatusCode)
+            if (result.IsSuccessStatusCode) 
             {
                 var data = result.Content.ReadAsStringAsync().Result;
                 var response = Newtonsoft.Json.JsonConvert.DeserializeObject<ApiResponse<string>>(data);
                 if (response.Success)
                 {
                     var SiteID = GlobalParameter.Config.Where(w => w.key == "SITE_ID").FirstOrDefault().value;
-                    if (SiteID == null)
+                    if (string.IsNullOrEmpty(SiteID))
                     {
-                        Response.Cookies.Append("Authorization", "danai");
+                        Response.Cookies.Append("Authorization", "sutha");
                         Response.Cookies.Append("U", model.Username);
-                        return RedirectToAction("SiteConfig", "SiteConfig");
+                        return RedirectToAction("Website", "Settings");
                     }
                     else
                     {

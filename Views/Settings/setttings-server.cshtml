@@ -29,6 +29,7 @@
                         <a class="nav-link mb-2 active" id="v-pills-home-tab" data-bs-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">เว็บไซต์</a>
                         <a class="nav-link mb-2" id="v-pills-profile-tab" data-bs-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false" tabindex="-1">MQTT BROKER</a>
                         @*<a class="nav-link mb-2" id="v-pills-rtsp-tab" data-bs-toggle="pill" href="#v-pills-rtsp" role="tab" aria-controls="v-pills-rtsp" aria-selected="false" tabindex="-1">RTSP SERVER</a>*@
+                        <a class="nav-link mb-2" id="v-pills-env-tab" data-bs-toggle="pill" href="#v-pills-env" role="tab" aria-controls="v-pills-env" aria-selected="false" tabindex="-1">ตัวแปรแวดล้อม</a>
                     </div>
                 </div><!-- end col -->
                 <div class="col-md-9">
@@ -126,12 +127,74 @@
 
                         </div>
 
+                        <div class="tab-pane fade" id="v-pills-env" role="tabpanel" aria-labelledby="v-pills-env-tab">
+                            <!-- Content for the "ตัวแปรแวดล้อม" (Environment Variables) tab -->
+                            <h4 class="mx-1 my-2 text-primary">ตัวแปรแวดล้อม</h4>
+                            <label class="mx-2 text-muted font-weight-normal">คุณสามารถตั้งค่าตัวแปรแวดล้อมได้ที่หน้านี้</label>
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                            <!-- Table to display the environment variables -->
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Key</th>
+                                            <th>Value</th>
+                                            <th>Tag</th>
+                                            <th>Update At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="envTableBody">
+                                        <!-- Placeholder for the environment variables data (populated by JavaScript) -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Buttons with Label Right -->
+                            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="refreshEnvData"><i class="ri-refresh-line label-icon align-middle fs-16 ms-2"></i>Refresh Data</button>
+                            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light mt-2" id="addNewEnv"><i class="ri-add-line label-icon align-middle fs-16 ms-2"></i>Add New Environment Variable</button>
+                        </div>
+
                     </div>
                 </div><!--  end col -->
             </div>
             <!--end row-->
         </div><!-- end card-body -->
     </div><!-- end card -->
+</div>
+
+<!-- Modal for adding/editing environment variables -->
+<div class="modal fade" id="envModal" tabindex="-1" role="dialog" aria-labelledby="addEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEditModalLabel">Add New Environment Variable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="envForm">
+                    <input type="hidden" id="envId" />
+                    <div class="mb-3">
+                        <label for="envKey" class="form-label">Key</label>
+                        <input type="text" class="form-control" id="envKey" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="envValue" class="form-label">Value</label>
+                        <input type="text" class="form-control" id="envValue" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="envgrp" class="form-label">Tag</label>
+                        <input type="text" class="form-control" id="envgrp" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section scripts{
@@ -191,9 +254,225 @@
             });
         });
     </script>
+    <script>
+        $(document).ready(function () {
+            // Function to fetch and display environment variables data
+            function fetchEnvData() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/settings",
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            // Clear existing table data
+                            $("#envTableBody").empty();
+
+                            // Loop through the environment variables and append to the table
+                            response.data.forEach(function (env) {
+                                $("#envTableBody").append(`
+                                            <tr>
+                                                <td>${env.key}</td>
+                                                <td>${env.value}</td>
+                                                <td>${env.grp}</td>
+                                                <td>${env.update_at}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-primary btn-edit" data-id="${env.id}">Edit</button>
+                                                    <button type="button" class="btn btn-sm btn-danger btn-delete" data-id="${env.id}">Delete</button>
+                                                </td>
+                                            </tr>
+                                        `);
+                            });
+
+                            // Attach click event handlers for edit and delete buttons
+                            $(".btn-edit").click(function () {
+                                const envId = $(this).data("id");
+                                openEditModal(envId);
+                            });
+
+                            $(".btn-delete").click(function () {
+                                const envId = $(this).data("id");
+                                deleteEnvVariable(envId);
+                            });
+
+                            // Show toast notification for successful data fetch
+                            Toastify({
+                                text: "Environment data fetched successfully!",
+                                duration: 1500, // 1.5 seconds
+                                newWindow: true,
+                                close: true,
+                                gravity: "top", // Position the toast at the top
+                                position: "right", // Position the toast on the right side
+                                backgroundColor: "#2ecc71", // Success color
+                                stopOnFocus: true // Stop the timer when the toast is clicked
+                            }).showToast();
+                        } else {
+                            console.log("Failed to fetch environment variables data.");
+                        }
+                    },
+                    error: function (error) {
+                        console.log("Error while fetching environment variables data:", error);
+                    }
+                });
+            }
+
+            // Initial fetch of environment variables data
+            fetchEnvData();
+
+            // Handle "Refresh Data" button click event
+            $("#refreshEnvData").click(function () {
+                fetchEnvData();
+            });
+
+            // Handle "Add New Environment Variable" button click event
+            $("#addNewEnv").click(function () {
+                openAddNewModal();
+            });
+
+            // Function to open the add new modal
+            function openAddNewModal() {
+                // Clear the modal form fields
+                $("#envKey").val("");
+                $("#envValue").val("");
+                $("#envgrp").val("");
+
+                // Show the modal
+                $("#addEditModalLabel").text("Add New Environment Variable");
+                $("#envModal").modal("show");
+            }
+
+            // Function to handle form submission for creating a new environment variable
+            function createEnvVariable(formData) {
+                $.ajax({
+                    type: "POST",
+                    url: "/api/settings",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            console.log("Setting created successfully:", response);
+                            // Example: You may want to refresh the data in the table after creation
+                            fetchEnvData();
+                            $("#envModal").modal("hide");
+
+
+                        } else {
+                            console.error("Failed to create setting:", response.error);
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error while creating setting:", error);
+                    }
+                });
+            }
+
+            // Function to open the edit modal with existing data
+            function openEditModal(envId) {
+                $.ajax({
+                    type: "GET",
+                    url: `/api/settings/${envId}`,
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            const env = response.data;
+
+                            console.log("Setting fetched for edit:", env);
+
+                            // Set the modal form fields with existing data
+                            $("#envId").val(env.id);
+                            $("#envKey").val(env.key);
+                            $("#envValue").val(env.value);
+                            $("#envgrp").val(env.grp);
+
+                            // Show the modal
+                            $("#addEditModalLabel").text("Edit Environment Variable");
+                            $("#envModal").modal("show");
+                        } else {
+                            console.error("Failed to fetch setting for edit:", response.error);
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error while fetching setting for edit:", error);
+                    }
+                });
+            }
+
+            // Function to handle form submission for updating an environment variable
+            function updateEnvVariable(envId, formData) {
+                $.ajax({
+                    type: "PUT",
+                    url: `/api/settings/${envId}`,
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            console.log("Setting updated successfully:", response);
+                            // Example: You may want to refresh the data in the table after update
+                            fetchEnvData();
+                            $("#envModal").modal("hide");
+                        } else {
+                            console.error("Failed to update setting:", response.error);
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error while updating setting:", error);
+                    }
+                });
+                $("#envId").val("");
+            }
+
+            // Function to handle deleting an environment variable
+            function deleteEnvVariable(envId) {
+                if (confirm("Are you sure you want to delete this environment variable?")) {
+                    $.ajax({
+                        type: "DELETE",
+                        url: `/api/settings/${envId}`,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            if (response.success) {
+                                console.log("Setting deleted successfully:", response);
+                                // Example: You may want to refresh the data in the table after deletion
+                                fetchEnvData();
+                            } else {
+                                console.error("Failed to delete setting:", response.error);
+                            }
+                        },
+                        error: function (error) {
+                            console.error("Error while deleting setting:", error);
+                        }
+                    });
+                }
+            }
+
+            // Handle form submission for adding/editing environment variables
+            $("#envForm").submit(function (event) {
+                event.preventDefault();
+
+                const envId = $("#envId").val();
+                const formData = {
+                    key: $("#envKey").val(),
+                    value: $("#envValue").val(),
+                    grp: $("#envgrp").val()
+                };
+
+                if (envId) {
+                    // If envId exists, it means we are updating an existing environment variable
+                    updateEnvVariable(envId, formData);
+                } else {
+                    // If envId does not exist, it means we are creating a new environment variable
+                    createEnvVariable(formData);
+                }
+            });
+        });
+    </script>
 
     <!-- Sweet Alerts js -->
     <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="~/assets/js/pages/notifications.init.js"></script>
 
 <!-- App js -->
 <script src="~/assets/js/app.js"></script>

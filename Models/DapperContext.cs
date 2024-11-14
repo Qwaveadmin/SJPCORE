@@ -51,13 +51,13 @@ namespace SJPCORE.Models
                     ("EMQX_PORT", "12660", "EMQX", new DateTime(2024, 5, 31, 13, 54, 0)),
                     ("EMQX_USER", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
                     ("EMQX_PASS", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
-                    ("DATABASE_HOST", "qwaveoffice.trueddns.com", "MySQL", new DateTime(2024, 6, 5, 14, 44, 0)),
+                    ("DATABASE_HOST", "49.0.69.173", "MySQL", new DateTime(2024, 6, 5, 14, 44, 0)),
                     ("DATABASE_PORT", "12661", "MySQL", new DateTime(2024, 6, 5, 14, 48, 0)),
-                    ("DATABASE_USER", "qwave@it@admin", "MySQL", new DateTime(2024, 6, 5, 14, 48, 0)),
-                    ("DATABASE_PASS", "Qwave@dmin020890751", "MySQL", new DateTime(2024, 6, 5, 14, 49, 0)),
+                    ("DATABASE_USER", "admin", "MySQL", new DateTime(2024, 6, 5, 14, 48, 0)),
+                    ("DATABASE_PASS", "Qwave@dmin", "MySQL", new DateTime(2024, 6, 5, 14, 49, 0)),
                     ("DATABASE_NAME", "sjp_broadcastradio", "MySQL", new DateTime(2024, 6, 5, 14, 50, 0)),
                     ("SITE_ID", "9db3edbd-26d1-4d57-a72a-e39f02260eb5", null, new DateTime(2024, 6, 5, 15, 18, 0)),
-                    ("HOST_URL", "https:sound-demo.qwave.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0)),
+                    ("HOST_URL", "https://sjp-sound.qwave.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0)),
                     ("SECRETKEY", "19c103a0b278a71e9fdeac2c50284c71", null, new DateTime(2024, 6, 7, 14, 49, 0))
                 };
 

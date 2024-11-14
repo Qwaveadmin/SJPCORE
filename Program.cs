@@ -6,14 +6,32 @@ using System;
 using SJPCORE.Controllers;
 using System.Diagnostics;
 using Dapper;
+using System.Windows.Forms;
 
 namespace SJPCORE
 {
     public class Program
     {
         private static Timer _timer;
+        private static NotifyIcon _notifyIcon;
+
         public static void Main(string[] args)
         {
+            // สร้างและตั้งค่า Tray Icon
+            _notifyIcon = new NotifyIcon
+            {
+                Icon = new System.Drawing.Icon("path_to_your_icon.ico"), // ระบุเส้นทางไปยังไฟล์ไอคอนของคุณ
+                Visible = true,
+                Text = "SJPCORE Application"
+            };
+
+            // สร้าง Context Menu สำหรับ Tray Icon
+            var contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add("Open", null, (s, e) => OpenBrowser("http://localhost:5000"));
+            contextMenu.Items.Add("Exit", null, (s, e) => Application.Exit());
+
+            _notifyIcon.ContextMenuStrip = contextMenu;
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 StationController.DeletePassed();
@@ -24,7 +42,6 @@ namespace SJPCORE
             var url = "http://localhost:5000";
             OpenBrowser(url);
             host.Run();
-
 
         }
 
