@@ -363,7 +363,7 @@ namespace SJPCORE.Util
             {
                 string cipherText = StaticDecryptString(context.Request.Cookies["Authorization"], GlobalParameter.Config.Find(c => c.key == "SECRETKEY").value);
 
-                var cntSite = JsonConvert.DeserializeObject<AuthorizeModel>(cipherText).site_allow;
+                var cntSite = JsonConvert.DeserializeObject<AuthorizeModel>(cipherText).site_access;
 
                 return cntSite.Count();
 
@@ -468,7 +468,7 @@ namespace SJPCORE.Util
                 string cipherText = StaticDecryptString(context.Request.Cookies["Authorization"], GlobalParameter.Config.Find(c => c.key == "SECRETKEY").value);
 
 
-                var sote_allow = JsonConvert.DeserializeObject<AuthorizeModel>(cipherText).site_allow;
+                var sote_allow = JsonConvert.DeserializeObject<AuthorizeModel>(cipherText).site_access.Select(x => x.Site).ToArray();
 
                 return sote_allow;
             }

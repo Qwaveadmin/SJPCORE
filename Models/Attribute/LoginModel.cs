@@ -19,4 +19,11 @@ namespace SJPCORE.Models.Attribute
         public string Password { get; set; }
         public string Role { get; set; }
     }
+
+    [Table("sjp_role")]
+    public class UserRoleModel
+    {
+        public string Id { get; set; }
+        public string Role { get; set; }
+    }
 }

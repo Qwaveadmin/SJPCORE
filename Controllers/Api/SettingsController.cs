@@ -1,13 +1,17 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using SJPCORE.Models;
+using SJPCORE.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SJPCORE.Controllers.Api
 {
@@ -17,11 +21,13 @@ namespace SJPCORE.Controllers.Api
     {
         private readonly DapperContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _serviceProvider;
 
-        public SettingsController(DapperContext context, IConfiguration configuration)
+        public SettingsController(DapperContext context, IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _context = context;
             _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
 
         // GET: api/settings
@@ -123,7 +129,7 @@ namespace SJPCORE.Controllers.Api
 
         // PUT: api/settings
         [HttpPut]
-        public IActionResult UpdateSettings(List<ConfigModel> settings)
+        public async Task<IActionResult> UpdateSettingsAsync(List<ConfigModel> settings)
         {
             if (!ModelState.IsValid || settings == null || settings.Count == 0)
             {
@@ -137,10 +143,9 @@ namespace SJPCORE.Controllers.Api
                 return BadRequest(response);
             }
 
-            try
-            {
                 using (var con = _context.CreateConnection())
                 {
+                    con.Open();
                     using (var transaction = con.BeginTransaction())
                     {
                         foreach (var setting in settings)
@@ -171,25 +176,18 @@ namespace SJPCORE.Controllers.Api
                     }
                 }
 
-                var response = new ApiResponse<string>
+                var response2 = new ApiResponse<string>
                 {
                     Success = true,
                     StatusCode = 200,
                     Message = "Settings updated successfully."
                 };
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                var errorResponse = new ApiResponse<string>
-                {
-                    Success = false,
-                    StatusCode = 500,
-                    Error = "An error occurred while updating the settings.",
-                    Message = ex.Message
-                };
-                return StatusCode(500, errorResponse);
-            }
+                // Restarts PuppeteerBackgroundService and EMQXClientService to apply the new settings
+                var emqxClientService = _serviceProvider.GetRequiredService<EMQXClientService>();
+                emqxClientService.Reconnect();
+                var puppeteerBackgroundService = _serviceProvider.GetRequiredService<PuppeteerBackgroundService>();
+                puppeteerBackgroundService.ReloadPageAsync();
+                return Ok(response2);
         }
 
         // PUT: api/settings/{id}

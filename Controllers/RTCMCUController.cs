@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SJPCORE.Models;
 
 namespace SJPCORE.Controllers
 {
@@ -12,17 +14,21 @@ namespace SJPCORE.Controllers
     public class RTCMCUController : Controller
     {
         private readonly ILogger<RTCMCUController> _logger;
-
-        public RTCMCUController(ILogger<RTCMCUController> logger)
+        private readonly DapperContext _context;    
+        public RTCMCUController(ILogger<RTCMCUController> logger, DapperContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
             Console.WriteLine("RTC MCU Controller");
-            var site = GlobalParameter.Config.Where(x => x.key == "SITE_ID").FirstOrDefault();
-            return View("rtc-mcu", site);
+            using (var con = _context.CreateConnection())
+            {
+                var site = con.Get<ConfigModel>("SITE_ID");
+                return View("rtc-mcu", site);
+            }
         }
 
         [HttpGet("error")]

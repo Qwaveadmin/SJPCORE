@@ -12,37 +12,51 @@ namespace SJPCORE
 {
     public class Program
     {
-        private static Timer _timer;
-        private static NotifyIcon _notifyIcon;
+        private static System.Threading.Timer _timer;
+        private static NotifyIcon _trayIcon;
+        private static Mutex _mutex = new Mutex(true, "{B1AFCF9A-5F6D-4D3A-8F3A-2A9D1E1A1A1A}"); // GUID ที่ไม่ซ้ำกันสำหรับแอปพลิเคชันของคุณ
 
+        [STAThread]
         public static void Main(string[] args)
         {
-            // สร้างและตั้งค่า Tray Icon
-            _notifyIcon = new NotifyIcon
+            // ตรวจสอบว่ามีการสร้างอินสแตนซ์ของแอปพลิเคชันแล้วหรือไม่
+            if (!_mutex.WaitOne(TimeSpan.Zero, true))
             {
-                Icon = new System.Drawing.Icon("path_to_your_icon.ico"), // ระบุเส้นทางไปยังไฟล์ไอคอนของคุณ
-                Visible = true,
-                Text = "SJPCORE Application"
-            };
+                MessageBox.Show("Application is already running.");
+                return;
+            }
 
-            // สร้าง Context Menu สำหรับ Tray Icon
-            var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("Open", null, (s, e) => OpenBrowser("http://localhost:5000"));
-            contextMenu.Items.Add("Exit", null, (s, e) => Application.Exit());
-
-            _notifyIcon.ContextMenuStrip = contextMenu;
-
-            ThreadPool.QueueUserWorkItem(_ =>
+            // สร้าง Thread สำหรับ Tray Icon
+            Thread trayThread = new Thread(() =>
             {
-                StationController.DeletePassed();
-                _timer = new Timer(RunSchedule, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
+                _trayIcon = new NotifyIcon
+                {
+                    Icon = new System.Drawing.Icon("favicon.ico"),
+                    Visible = true,
+                    Text = "ASP.NET Core Tray App",
+                    ContextMenuStrip = new ContextMenuStrip()
+                };
+
+                _trayIcon.ContextMenuStrip.Items.Add("Open", null, (s, e) => OpenBrowser("http://localhost:5000"));
+                _trayIcon.ContextMenuStrip.Items.Add("Exit", null, (s, e) => Application_Exiting(s, e));
+
+                Application.Run(); // รัน Tray Icon
             });
 
-            var host = CreateHostBuilder(args).Build();
-            var url = "http://localhost:5000";
-            OpenBrowser(url);
-            host.Run();
 
+            trayThread.SetApartmentState(ApartmentState.STA);
+            trayThread.Start();
+
+            // สร้าง Thread สำหรับ ASP.NET Core Web Host
+            Thread webHostThread = new Thread(() =>
+            {
+                var host = CreateHostBuilder(args).Build();
+                var url = "http://localhost:5000";
+                OpenBrowser(url);
+                host.Run();
+            });
+
+            webHostThread.Start();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -58,15 +72,6 @@ namespace SJPCORE
                     });
                 });
 
-        private static void RunSchedule(object state)
-        {
-            // Run the code on a separate thread to avoid blocking the main thread
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                StationController.CheckScheduleAsync(state);
-            });
-        }
-
         private static void OpenBrowser(string url)
         {
             try
@@ -81,6 +86,13 @@ namespace SJPCORE
             {
                 Console.WriteLine($"Failed to open browser: {ex.Message}");
             }
+        }
+
+        private static void Application_Exiting(object sender, EventArgs e)
+        {
+            _trayIcon.Visible = false;
+            Environment.Exit(0);
+            Application.Exit();
         }
     }
 }

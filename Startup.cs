@@ -16,6 +16,7 @@ using System.Linq;
 using SJPCORE.Util;
 using SJPCORE.Models.Interface;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace SJPCORE
 {
@@ -41,18 +42,18 @@ namespace SJPCORE
             services.AddControllersWithViews();
             
             services.AddTransient<DapperContext>();
-            services.AddTransient<AppDbContext>();
             services.AddTransient<PassParam>();
             services.AddSingleton<DapperContext>();
             await DatabaseInitializer.InitializeDatabaseAsync(services.BuildServiceProvider().GetService<DapperContext>());
-            services.AddSingleton<AppDbContext>();
             services.AddSingleton<PassParam>();
 
             services.AddTransient<AuthPassed>();
+ 
             services.AddSingleton<AuthPassed>();
 
             services.AddScoped<ISecretKeyHelper, SecretKeyHelper>();
-            services.AddHostedService<PuppeteerBackgroundService>();
+            services.AddSingleton<PuppeteerBackgroundService>();
+            services.AddHostedService(provider => provider.GetRequiredService<PuppeteerBackgroundService>());
             services.AddSingleton<EMQXClientService>(); // Add as singleton
             services.AddHostedService(provider => provider.GetRequiredService<EMQXClientService>());
             

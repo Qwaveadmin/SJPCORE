@@ -51,14 +51,8 @@ namespace SJPCORE.Models
                     ("EMQX_PORT", "12660", "EMQX", new DateTime(2024, 5, 31, 13, 54, 0)),
                     ("EMQX_USER", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
                     ("EMQX_PASS", "QWAVE", "EMQX", new DateTime(2024, 6, 5, 15, 24, 0)),
-                    ("DATABASE_HOST", "49.0.69.173", "MySQL", new DateTime(2024, 6, 5, 14, 44, 0)),
-                    ("DATABASE_PORT", "12661", "MySQL", new DateTime(2024, 6, 5, 14, 48, 0)),
-                    ("DATABASE_USER", "admin", "MySQL", new DateTime(2024, 6, 5, 14, 48, 0)),
-                    ("DATABASE_PASS", "Qwave@dmin", "MySQL", new DateTime(2024, 6, 5, 14, 49, 0)),
-                    ("DATABASE_NAME", "sjp_broadcastradio", "MySQL", new DateTime(2024, 6, 5, 14, 50, 0)),
                     ("SITE_ID", "9db3edbd-26d1-4d57-a72a-e39f02260eb5", null, new DateTime(2024, 6, 5, 15, 18, 0)),
-                    ("HOST_URL", "https://sjp-sound.qwave.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0)),
-                    ("SECRETKEY", "19c103a0b278a71e9fdeac2c50284c71", null, new DateTime(2024, 6, 7, 14, 49, 0))
+                    ("HOST_URL", "https://sjp-sound.qwave.cloud/", null, new DateTime(2024, 6, 6, 11, 35, 0))
                 };
 
                 string checkQuery = "SELECT COUNT(1) FROM sjp_setting WHERE [key] = @key";
@@ -76,6 +70,43 @@ namespace SJPCORE.Models
                         await connection.ExecuteAsync(insertQuery, new { key = record.key, value = record.value, grp = record.grp, updateAt = record.updateAt });
                     }
                 }
+
+                // Check Then Create sjp_role table and Insert default roles(Admin and Operator)
+                string checkRoleTableQuery = "SELECT COUNT(1) FROM sqlite_master WHERE type = 'table' AND name = 'sjp_role'";
+                string createRoleTableQuery = @"
+                    CREATE TABLE sjp_role (
+                        id TEXT PRIMARY KEY,
+                        role TEXT NOT NULL,
+                        create_at TEXT NOT NULL
+                    )";
+                string checkAdminRoleQuery = "SELECT COUNT(1) FROM sjp_role WHERE role = 'Admin'";
+                string checkUserRoleQuery = "SELECT COUNT(1) FROM sjp_role WHERE role = 'Operator'";
+                string insertAdminRoleQuery = @"
+                    INSERT INTO sjp_role (id, role, create_at)
+                    VALUES ('a65ad5d3-2aad-11ee-b93d-d067e5ec3096', 'Admin', datetime('now'))";
+                string insertOperatorRoleQuery = @"
+                    INSERT INTO sjp_role (id, role, create_at)
+                    VALUES ('aabf3c50-2aad-11ee-b93d-d067e5ec3096', 'Operator', datetime('now'))";
+
+
+                var roleTableExists = await connection.ExecuteScalarAsync<int>(checkRoleTableQuery);
+                if (roleTableExists == 0)
+                {
+                    await connection.ExecuteAsync(createRoleTableQuery);
+                }
+
+                var adminRoleExists = await connection.ExecuteScalarAsync<int>(checkAdminRoleQuery);
+                if (adminRoleExists == 0)
+                {
+                    await connection.ExecuteAsync(insertAdminRoleQuery);
+                }
+
+                var userRoleExists = await connection.ExecuteScalarAsync<int>(checkUserRoleQuery);
+
+                if (userRoleExists == 0)
+                {
+                    await connection.ExecuteAsync(insertOperatorRoleQuery);
+                }          
             }
         }
     }

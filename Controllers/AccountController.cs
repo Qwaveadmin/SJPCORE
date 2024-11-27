@@ -18,6 +18,8 @@ using System.Formats.Asn1;
 using System.Collections.Generic;
 using System;
 using SJPCORE.Models.Interface;
+using Newtonsoft.Json;
+using PuppeteerSharp.Cdp;
 
 namespace SJPCORE.Controllers
 {
@@ -28,15 +30,13 @@ namespace SJPCORE.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly DapperContext _context;
         private readonly HttpClient _client;
-        private readonly AppDbContext _appDbContext;
         private readonly ISecretKeyHelper _secretKeyHelper;
 
 
-        public AccountController(ILogger<AccountController> logger, DapperContext context, AppDbContext appDbContext, ISecretKeyHelper secretKeyHelper)
+        public AccountController(ILogger<AccountController> logger, DapperContext context, ISecretKeyHelper secretKeyHelper)
         {
             _logger = logger;
             _context = context;
-            _appDbContext = appDbContext;
             _secretKeyHelper = secretKeyHelper;
             _client = new HttpClient();
         }
@@ -58,114 +58,126 @@ namespace SJPCORE.Controllers
             return View("SignIn");
         }
 
-        [HttpPost]
-[ActionName("SignIn")]
-public IActionResult SignIn([FromBody] LoginModel model)
-{
-    if (ModelState.IsValid)
-    {
-        try
+        [ActionName("Config")]
+        public IActionResult Config()
         {
-            //Get HOST_URL from setting table
-            var host = GlobalParameter.Config.Where(w => w.key == "HOST_URL").FirstOrDefault().value;
-            // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
-            var result = _client.PostAsync($"{host}api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
-            Console.WriteLine(result.StatusCode);
-            if (result.IsSuccessStatusCode) 
+                return View("Config");
+        }
+
+        [HttpPost]
+        [ActionName("SignIn")]
+        public IActionResult SignIn([FromBody] LoginModel model)
+        {
+            if (ModelState.IsValid)
             {
-                var data = result.Content.ReadAsStringAsync().Result;
-                var response = Newtonsoft.Json.JsonConvert.DeserializeObject<ApiResponse<string>>(data);
-                if (response.Success)
-                {
-                    var SiteID = GlobalParameter.Config.Where(w => w.key == "SITE_ID").FirstOrDefault().value;
-                    if (string.IsNullOrEmpty(SiteID))
+
+                    //Get HOST_URL from setting table
+       
+                    var host = GlobalParameter.Config.Where(w => w.key == "HOST_URL").FirstOrDefault().value;
+                    // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
+                    var result = _client.PostAsync($"{host}api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
+         
+                    if (result.IsSuccessStatusCode) 
                     {
-                        Response.Cookies.Append("Authorization", "sutha");
-                        Response.Cookies.Append("U", model.Username);
-                        return RedirectToAction("Website", "Settings");
+                        var data = result.Content.ReadAsStringAsync().Result;
+                        var response = JsonConvert.DeserializeObject<ApiResponse<string>>(data);
+
+                        // check null
+                        if (response.Data == null)
+                        {
+                            return Ok(new { success = false, msg = "Username or Password is incorrect" });
+                        }
+                        string decrypted = _secretKeyHelper.DecryptString(response.Data, GlobalParameter.secretKey);
+                        var authenModel = JsonConvert.DeserializeObject<AuthorizeModel>(decrypted);
+          
+                        if (response.Success)
+                        {
+                            using (var connection = _context.CreateConnection())
+                            {
+                                var SITE_ID = connection.Get<ConfigModel>("SITE_ID").value;
+                                // ตรวจสอบว่าใน authenModel มีข้อมูล Site ที่ตรงกับ SITE_ID หรือไม่                            
+                                if (authenModel.site_access.Any(w => w.Site == SITE_ID))
+                                {
+                                    // Update หรือ Insert ข้อมูลผู้ใช้ลงใน SQLite
+                                    
+                                        var userlist = connection.GetList<UserModel>().ToList();
+                                        var userdb = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
+                                        if (userdb != null)
+                                        {
+                                            userdb.Username = model.Username;
+                                            userdb.Password = authenModel.password;
+      
+                                            userdb.Role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role;
+    
+                                            connection.Update(userdb);
+                                        }
+                                        else
+                                        {
+                                            connection.Execute("INSERT INTO sjp_user (username, password, role) VALUES (@username, @password, @role)", new {username = model.Username, password = authenModel.password, role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role });
+                                        }
+                                        Response.Cookies.Append("Authorization" , connection.GetList<UserRoleModel>().FirstOrDefault(w => w.Id == authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role).Role == "Admin" ? "sutha" : "danai");
+                                        Response.Cookies.Append("U", model.Username);
+                                        return Ok(new { success = true,msg = "เข้าสู่ระบบสำเร็จ.." });
+                                    }
+                                
+                                // else if (string.IsNullOrEmpty(SITE_ID))
+                                // {
+                                //     // Set Cookie and Redirect to Config Page
+                                //     Response.Cookies.Append("Authorization", "config");
+                                //     Response.Cookies.Append("U", model.Username);
+                                //     return Ok(new { success = true, msg = "กรุณาตั้งค่า Site ID ก่อนใช้งาน..", redirectUrl = "/Account/Config" });
+                                // }
+                                else
+                                {
+                                    return Ok(new { success = false, msg = "ไม่มีสิทธิ์เข้าใช้งานระบบ.." });
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return Ok(new { success = false, msg = response.Error + " กรุณาติดต่อผู้ดูแลระบบ.." });
+                        }
                     }
                     else
                     {
-                        string sql = "SELECT users_all.id , users_all.username, users_all.password, users_role.role FROM users_all INNER JOIN site_access ON users_all.id = site_access.users INNER JOIN users_role ON site_access.role = users_role.id WHERE users_all.username = @username AND site_access.site = @site";              
-                        var user = _appDbContext.CreateConnection().Query<UserModel>(sql, new { username = model.Username , site = SiteID }).FirstOrDefault();
-                        if (user != null)
+                        // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
+                        using (var connection = _context.CreateConnection())
                         {
-                            // Update หรือ Insert ข้อมูลผู้ใช้ลงใน SQLite
-                            using (var connection = _context.CreateConnection())
+                            var userlist = connection.GetList<UserModel>().ToList();
+                            if (userlist.Any())
                             {
-                                var userlist = connection.GetList<UserModel>().ToList();
-                                var userdb = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
-                                if (userdb != null)
+                                var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
+                                if (user != null)
                                 {
-                                    userdb.Username = model.Username;
-                                    userdb.Password = user.Password;
-                                    userdb.Role = user.Role;
-                                    connection.Update(userdb);
+                                    if (VerifyPassword(model.Password, user.Password, GlobalParameter.secretKey))
+                                    {
+                                        Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
+                                        Response.Cookies.Append("U", user.Username);
+                                        return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
+                                    }
+                                    else
+                                    {
+                                        return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
+                                    }
                                 }
                                 else
                                 {
-                                    connection.Execute("INSERT INTO sjp_user (username, password, role) VALUES (@username, @password, @role)", new {username = user.Username, password = user.Password, role = user.Role });
+                                    return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
                                 }
-                            }
-                            Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
-                            Response.Cookies.Append("U", model.Username);
-                            return Ok(new { success = true,msg = "เข้าสู่ระบบสำเร็จ.." });
-                        }
-                        else
-                        {
-                            return Ok(new { success = false, msg = "ไม่มีสิทธิ์เข้าใช้งานระบบ.." });
-                        }
-                    }
-                }
-                else
-                {
-                    return Ok(new { success = false, msg = response.Error + " กรุณาติดต่อผู้ดูแลระบบ.." });
-                }
-            }
-            else
-            {
-                // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
-                using (var connection = _context.CreateConnection())
-                {
-                    var userlist = connection.GetList<UserModel>().ToList();
-                    if (userlist.Any())
-                    {
-                        var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
-                        if (user != null)
-                        {
-                            if (VerifyPassword(model.Password, user.Password, GlobalParameter.Config.Where(w => w.key == "SECRETKEY").FirstOrDefault().value))
-                            {
-                                Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
-                                Response.Cookies.Append("U", user.Username);
-                                return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
                             }
                             else
                             {
-                                return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
+                                return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
                             }
                         }
-                        else
-                        {
-                            return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
-                        }
                     }
-                    else
-                    {
-                        return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
-                    }
-                }
+                
+            }
+            else
+            {
+                return BadRequest();
             }
         }
-        catch (Exception ex)
-        {
-            return Ok(new { success = false, msg = ex.Message });
-        }
-    }
-    else
-    {
-        return BadRequest();
-    }
-}
 
 
         [HttpPost]

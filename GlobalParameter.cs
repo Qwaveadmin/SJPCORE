@@ -13,5 +13,6 @@ namespace SJPCORE
         public static string port { get; set; } = "11257";
         public static string username { get; set; } = "QWAVE";
         public static string password { get; set; } = "QWAVE";
+        public static string secretKey { get; } = "19c103a0b278a71e9fdeac2c50284c71";
     }
 }

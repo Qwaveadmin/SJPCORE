@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Sign In";
     Layout = null;
 }
@@ -47,23 +47,38 @@
 
             
                                             <div class="mb-3">
-                                                <label for="username" class="form-label">ชื่อผู้ใช้</label>
-                                                <input type="text" class="form-control" id="username" placeholder="โปรดระบุชื่อผู้ใช้">
+                                                <label for="username" class="form-label">Site ID</label>
+                                                <input type="text" class="form-control" id="SITE_ID" placeholder="โปรดระบุ Site ID" value="@GlobalParameter.Config.Where(w=>w.key=="SITE_ID").FirstOrDefault().value">
                                             </div>
                     
                                             <div class="mb-3">
-
-                                                <label class="form-label" for="password-input">รหัสผ่าน</label>
-                                                <div class="position-relative auth-pass-inputgroup mb-3">
-                                                    <input type="password" class="form-control pe-5 password-input" placeholder="โปรดระบุรหัสผ่าน" id="password-input">
-                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                                                </div>
+                                                <label for="username" class="form-label">Radio Host URL</label>
+                                                <input type="text" class="form-control" id="HOST_URL" placeholder="โปรดระบุ Radio Host URL" value="@GlobalParameter.Config.Where(w=>w.key=="HOST_URL").FirstOrDefault().value">
                                             </div>
 
-            
-                                            
+                    
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label">EMQX_HOST</label>
+                                                <input type="text" class="form-control" id="EMQX_HOST" placeholder="โปรดระบุ EMQX_HOST" value="@GlobalParameter.Config.Where(w=>w.key=="EMQX_IP").FirstOrDefault().value">
+                                                
+                                            </div
+
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label">EMQX_PORT</label>
+                                                <input type="text" class="form-control" id="EMQX_PORT" placeholder="โปรดระบุ EMQX_PORT" value="@GlobalParameter.Config.Where(w=>w.key=="EMQX_PORT").FirstOrDefault().value">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label">EMQX_USER</label>
+                                                <input type="text" class="form-control" id="EMQX_USER" placeholder="โปรดระบุ EMQX_USER" value="@GlobalParameter.Config.Where(w=>w.key=="EMQX_USER").FirstOrDefault().value">
+                                            </div>
+                    
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label">EMQX_PASS</label>
+                                                <input type="text" class="form-control" id="EMQX_PASS" placeholder="โปรดระบุ EMQX_PASS" value="@GlobalParameter.Config.Where(w=>w.key=="EMQX_PASS").FirstOrDefault().value">
+                                            </div>                                                      
                                             <div class="mt-4">
-                                        <button class="btn btn-warning w-100 text-dark" id="save" type="submit">เข้าสู่ระบบ</button>
+                                                <button class="btn btn-warning w-100 text-dark" id="save" type="submit">บันทึก</button>
                                             </div>
 
                                           
@@ -73,9 +88,6 @@
                                 <!-- end card body -->
                             </div>
                             <!-- end card -->
-
-                           
-
                         </div>
                     </div>
                     <!-- end row -->
@@ -113,44 +125,44 @@
 
 
 <script>
-
-
-
     $(document).ready(function () {
         $('#save').click(function (e) {
             e.preventDefault(); // prevent the form from submitting the default way
 
-            var formData = {
-                username: $('#username').val(),
-                password: $('#password-input').val(),
-            };
+            // สร้าง object สำหรับเก็บข้อมูลการตั้งค่า
+            var formData = [
+                { key: "SITE_ID", value: $('#SITE_ID').val(), grp: ""},
+                { key: "HOST_URL", value: $('#HOST_URL').val(), grp: ""},
+                { key: "EMQX_IP", value: $('#EMQX_HOST').val() , grp: "EMQX"},
+                { key: "EMQX_PORT", value: $('#EMQX_PORT').val(), grp: "EMQX"},
+                { key: "EMQX_USER", value: $('#EMQX_USER').val(), grp: "EMQX"},
+                { key: "EMQX_PASS", value: $('#EMQX_PASS').val(), grp: "EMQX"}
 
+            ];
+
+            // ส่งคำขอ AJAX ไปยัง API
             $.ajax({
-                type: "POST",
-                url: "/account/signin",
+                type: "PUT",
+                url: "/api/settings",
                 data: JSON.stringify(formData),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (response) {
                     if (response.success) {
-                        if (response.redirectUrl) {
-                            window.location = response.redirectUrl; // Redirect ไปยัง URL ที่เซิร์ฟเวอร์บอกมา
-                        } else {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: response.msg,
-                                timer: 3000,
-                                onClose: () => window.location = "/"
-                            }).then(() => {
-                                window.location = "/";
-                            });
-                        }
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ..',
+                            text: response.message,
+                            timer: 3000,
+                            onClose: () => window.location = "/"
+                        }).then(() => {
+                            window.location = "/"
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
-                            text: response.msg,
+                            title: 'เกิดข้อผิดพลาด...',
+                            text: response.message,
                             timer: 3000
                         });
                     }
@@ -158,8 +170,8 @@
                 error: function (error) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: error.responseJSON?.msg || 'An error occurred',
+                        title: 'เกิดข้อผิดพลาด...',
+                        text: error.responseText,
                         timer: 3000
                     });
                 }

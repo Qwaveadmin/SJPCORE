@@ -12,6 +12,8 @@ namespace SJPCORE.Util
     public class PuppeteerBackgroundService : BackgroundService
     {
         private readonly ILogger<PuppeteerBackgroundService> _logger;
+        private IBrowser _browser;
+        private IPage _page;
         private readonly string _url;
 
         public PuppeteerBackgroundService(ILogger<PuppeteerBackgroundService> logger)
@@ -30,33 +32,33 @@ namespace SJPCORE.Util
             {
                 try
                 {
-                    using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                    _browser = await Puppeteer.LaunchAsync(new LaunchOptions
                     {
                         Headless = true,
                     });
-                    using var page = await browser.NewPageAsync();
+                    _page = await _browser.NewPageAsync();
 
                     // สมัครสมาชิกกับเหตุการณ์ Console ของ Puppeteer
-                    page.Console += (sender, e) => 
+                    _page.Console += (sender, e) => 
                     {
                         _logger.LogInformation($"Browser console message: {e.Message.Text}");
                     };
                     
                     // เพิ่ม HTTP Header เพื่อส่งข้อมูลรับรอง
-                    await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+                    await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
                     {
                         { "X-Custom-Auth", "25c1e9bf-5136-4d61-ac93-651723bdf291" }, // ต้องตรงกับค่าที่กำหนดใน Middleware
                         { "Authorization", "sutha" }, // เพิ่ม Header Authorization
                         { "U", "wertring2" }
                     });
 
-                    await page.GoToAsync(_url);
+                    await _page.GoToAsync(_url);
 
                     // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
-                    await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
+                    await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
 
                     // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
-                    await page.ClickAsync("body");
+                    await _page.ClickAsync("body");
                      
 
                     // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
@@ -74,6 +76,22 @@ namespace SJPCORE.Util
             _logger.LogInformation("Puppeteer background service is stopping.");
 
             await base.StopAsync(cancellationToken);
+        }
+
+        // Reload the page
+        public async void ReloadPageAsync()
+        {
+            if (_page != null)
+            {
+                await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+                    {
+                        { "X-Custom-Auth", "25c1e9bf-5136-4d61-ac93-651723bdf291" }, // ต้องตรงกับค่าที่กำหนดใน Middleware
+                        { "Authorization", "sutha" }, // เพิ่ม Header Authorization
+                        { "U", "wertring2" }
+                    });
+
+                await _page.ReloadAsync();
+            }
         }
     }
 }

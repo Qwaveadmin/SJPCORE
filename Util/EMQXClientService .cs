@@ -35,18 +35,10 @@ namespace SJPCORE.Util
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             string site_id = "";
-            using (var con = new SqliteConnection("Data Source=database.db"))
-            {
-                // Get site_id Where key = 'SITE_ID'
-                site_id = con.Get<ConfigModel>("SITE_ID").value;
-            }
-
-            var options = new MqttClientOptionsBuilder()
-                .WithClientId(site_id)
-                .WithTcpServer("qwaveoffice.trueddns.com", 12660) // กำหนดค่า MQTT Broker และพอร์ต
-                .WithCredentials("apiwat59", "panyoi59") // กำหนด Username และ Password
-                .WithCleanSession()
-                .Build();
+            string emqx_ip = "";
+            string emqx_port = "";
+            string emqx_username = "";
+            string emqx_password = "";
 
             _mqttClient = new MqttFactory().CreateMqttClient();
 
@@ -219,6 +211,23 @@ namespace SJPCORE.Util
                 {
                     try
                     {
+                        using (var con = new SqliteConnection("Data Source=database.db"))
+                        {
+                            // Get site_id Where key = 'SITE_ID'
+                            site_id = con.Get<ConfigModel>("SITE_ID").value;
+                            emqx_ip = con.Get<ConfigModel>("EMQX_IP").value;
+                            emqx_port = con.Get<ConfigModel>("EMQX_PORT").value;
+                            emqx_username = con.Get<ConfigModel>("EMQX_USER").value;
+                            emqx_password = con.Get<ConfigModel>("EMQX_PASS").value;
+                        }
+
+                        var options = new MqttClientOptionsBuilder()
+                            .WithClientId(site_id)
+                            .WithTcpServer(emqx_ip, int.Parse(emqx_port))
+                            .WithCredentials(emqx_username, emqx_password)
+                            .WithCleanSession()
+                            .Build();
+
                         await _mqttClient.ConnectAsync(options, stoppingToken);
                     }
                     catch (Exception ex)
@@ -281,5 +290,24 @@ namespace SJPCORE.Util
             }
             await base.StopAsync(stoppingToken);
         }
+
+        // Restart the service
+        public void Reconnect()
+        {
+            // disconnect from the broker
+            if (_mqttClient != null && _mqttClient.IsConnected)
+            {
+                try
+                {
+                    _mqttClient.DisconnectAsync();
+                    _logger.LogInformation("Disconnected from MQTT Broker.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error while disconnecting from MQTT Broker: {ex.Message}");
+                }
+            }
+        }
+
     }
 }
