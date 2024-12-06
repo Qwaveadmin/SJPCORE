@@ -52,9 +52,10 @@
                                             </div>
                     
                                             <div class="mb-3">
-                                                <label for="username" class="form-label">Radio Host URL</label>
-                                                <input type="text" class="form-control" id="HOST_URL" placeholder="โปรดระบุ Radio Host URL" value="@GlobalParameter.Config.Where(w=>w.key=="HOST_URL").FirstOrDefault().value">
+                                            <label for="HOST_URL" class="form-label">Radio Host URL</label>
+                                            <input type="url" class="form-control" id="HOST_URL" name="HOST_URL" placeholder="โปรดระบุ Radio Host URL (เช่น https://example.com/)" required pattern="https?://.+" value="@GlobalParameter.Config.Where(w => w.key == "HOST_URL").FirstOrDefault()?.value" oninvalid="this.setCustomValidity('กรุณากรอก URL ที่ถูกต้อง (ต้องเริ่มต้นด้วย http:// หรือ https://)')" oninput="setCustomValidity('')">
                                             </div>
+
 
                     
                                             <div class="mb-3">
@@ -127,20 +128,61 @@
 <script>
     $(document).ready(function () {
         $('#save').click(function (e) {
-            e.preventDefault(); // prevent the form from submitting the default way
+            e.preventDefault(); // ป้องกันไม่ให้ฟอร์มส่งข้อมูลตามปกติ
 
             // สร้าง object สำหรับเก็บข้อมูลการตั้งค่า
             var formData = [
-                { key: "SITE_ID", value: $('#SITE_ID').val(), grp: ""},
-                { key: "HOST_URL", value: $('#HOST_URL').val(), grp: ""},
-                { key: "EMQX_IP", value: $('#EMQX_HOST').val() , grp: "EMQX"},
-                { key: "EMQX_PORT", value: $('#EMQX_PORT').val(), grp: "EMQX"},
-                { key: "EMQX_USER", value: $('#EMQX_USER').val(), grp: "EMQX"},
-                { key: "EMQX_PASS", value: $('#EMQX_PASS').val(), grp: "EMQX"}
-
+                { key: "SITE_ID", value: $('#SITE_ID').val(), grp: "" },
+                { key: "HOST_URL", value: $('#HOST_URL').val(), grp: "" },
+                { key: "EMQX_IP", value: $('#EMQX_HOST').val(), grp: "EMQX" },
+                { key: "EMQX_PORT", value: $('#EMQX_PORT').val(), grp: "EMQX" },
+                { key: "EMQX_USER", value: $('#EMQX_USER').val(), grp: "EMQX" },
+                { key: "EMQX_PASS", value: $('#EMQX_PASS').val(), grp: "EMQX" }
             ];
 
-            // ส่งคำขอ AJAX ไปยัง API
+            // เริ่มต้นการตรวจสอบข้อมูล
+            var errors = [];
+
+            // ตรวจสอบว่าฟิลด์ที่จำเป็นไม่เว้นว่าง
+            formData.forEach(function(item) {
+                if (!item.value || item.value.trim() === "") {
+                    errors.push("กรุณากรอกค่าในช่อง " + item.key);
+                }
+            });
+
+            // ตรวจสอบรูปแบบของ HOST_URL
+            var hostUrl = $('#HOST_URL').val().trim();
+            if (hostUrl) {
+                var urlPattern = /^(https?:\/\/)/;
+                if (!urlPattern.test(hostUrl)) {
+                    errors.push("HOST_URL ต้องเริ่มต้นด้วย http:// หรือ https://");
+                } else {
+                    try {
+                        new URL(hostUrl);
+                    } catch (_) {
+                        errors.push("HOST_URL ไม่ใช่ URL ที่ถูกต้อง");
+                    }
+                }
+            }
+
+            // ตรวจสอบว่า EMQX_PORT เป็นตัวเลข
+            var emqxPort = $('#EMQX_PORT').val().trim();
+            if (emqxPort && !/^\d+$/.test(emqxPort)) {
+                errors.push("EMQX_PORT ต้องเป็นตัวเลข");
+            }
+
+            // ถ้ามีข้อผิดพลาด แสดงข้อความและหยุดการส่ง AJAX
+            if (errors.length > 0) {
+                var errorMessage = errors.join("<br>");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด...',
+                    html: errorMessage
+                });
+                return; // หยุดการทำงาน ถ้ามีข้อผิดพลาด
+            }
+
+            // ถ้าข้อมูลถูกต้อง ส่งคำขอ AJAX ไปยัง API
             $.ajax({
                 type: "PUT",
                 url: "/api/settings",
@@ -151,12 +193,10 @@
                     if (response.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'สำเร็จ..',
+                            title: 'สำเร็จ...',
                             text: response.message,
                             timer: 3000,
-                            onClose: () => window.location = "/"
-                        }).then(() => {
-                            window.location = "/"
+                            willClose: () => window.location = "/"
                         });
                     } else {
                         Swal.fire({
@@ -179,6 +219,7 @@
         });
     });
 </script>
+
 
 <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 

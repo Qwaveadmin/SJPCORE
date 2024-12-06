@@ -20,6 +20,7 @@ using System;
 using SJPCORE.Models.Interface;
 using Newtonsoft.Json;
 using PuppeteerSharp.Cdp;
+using System.Text;
 
 namespace SJPCORE.Controllers
 {
@@ -63,122 +64,140 @@ namespace SJPCORE.Controllers
         {
                 return View("Config");
         }
-
         [HttpPost]
         [ActionName("SignIn")]
-        public IActionResult SignIn([FromBody] LoginModel model)
+        public async Task<IActionResult> SignIn([FromBody] LoginModel model)
         {
             if (ModelState.IsValid)
             {
+                // Get HOST_URL from setting table
+                var hostConfig = GlobalParameter.Config.FirstOrDefault(w => w.key == "HOST_URL");
+                if (hostConfig == null || string.IsNullOrWhiteSpace(hostConfig.value))
+                {
+                    return Ok(new { success = false, msg = "HOST_URL is not configured properly." });
+                }
+                var host = hostConfig.value.Trim();
 
-                    //Get HOST_URL from setting table
-       
-                    var host = GlobalParameter.Config.Where(w => w.key == "HOST_URL").FirstOrDefault().value;
-                    // ส่งไปคำขอเช็คกับระบบหลัก(https://demo.sjpradio.cloud/api/authentication/login) ว่ามีข้อมูลหรือไม่   
-                    var result = _client.PostAsync($"{host}api/authentication/login", new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(model), System.Text.Encoding.UTF8, "application/json")).Result;
-         
-                    if (result.IsSuccessStatusCode) 
+                // Ensure host is a valid absolute URI
+                if (!Uri.TryCreate(host, UriKind.Absolute, out Uri hostUri))
+                {
+                    return Ok(new { success = false, msg = "HOST_URL is not a valid absolute URI." });
+                }
+
+                // Set the BaseAddress of HttpClient
+                _client.BaseAddress = hostUri;
+
+                // Send request to the main system
+                HttpResponseMessage result;
+                try
+                {
+                    result = await _client.PostAsync("api/authentication/login", new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json"));
+                }
+                catch (Exception ex)
+                {
+                    // Handle exceptions (e.g., network issues)
+                    return Ok(new { success = false, msg = $"Error connecting to the authentication service: {ex.Message}" });
+                }
+                if (result.IsSuccessStatusCode) 
+                {
+                    var data = result.Content.ReadAsStringAsync().Result;
+                    var response = JsonConvert.DeserializeObject<ApiResponse<string>>(data);
+
+                    // check null
+                    if (response.Data == null)
                     {
-                        var data = result.Content.ReadAsStringAsync().Result;
-                        var response = JsonConvert.DeserializeObject<ApiResponse<string>>(data);
-
-                        // check null
-                        if (response.Data == null)
+                        return Ok(new { success = false, msg = "Username or Password is incorrect" });
+                    }
+                    string decrypted = _secretKeyHelper.DecryptString(response.Data, GlobalParameter.secretKey);
+                    var authenModel = JsonConvert.DeserializeObject<AuthorizeModel>(decrypted);
+        
+                    if (response.Success)
+                    {
+                        using (var connection = _context.CreateConnection())
                         {
-                            return Ok(new { success = false, msg = "Username or Password is incorrect" });
-                        }
-                        string decrypted = _secretKeyHelper.DecryptString(response.Data, GlobalParameter.secretKey);
-                        var authenModel = JsonConvert.DeserializeObject<AuthorizeModel>(decrypted);
-          
-                        if (response.Success)
-                        {
-                            using (var connection = _context.CreateConnection())
+                            var SITE_ID = connection.Get<ConfigModel>("SITE_ID").value;
+                            // ตรวจสอบว่าใน authenModel มีข้อมูล Site ที่ตรงกับ SITE_ID หรือไม่                            
+                            if (authenModel.site_access.Any(w => w.Site == SITE_ID))
                             {
-                                var SITE_ID = connection.Get<ConfigModel>("SITE_ID").value;
-                                // ตรวจสอบว่าใน authenModel มีข้อมูล Site ที่ตรงกับ SITE_ID หรือไม่                            
-                                if (authenModel.site_access.Any(w => w.Site == SITE_ID))
-                                {
-                                    // Update หรือ Insert ข้อมูลผู้ใช้ลงใน SQLite
-                                    
-                                        var userlist = connection.GetList<UserModel>().ToList();
-                                        var userdb = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
-                                        if (userdb != null)
-                                        {
-                                            userdb.Username = model.Username;
-                                            userdb.Password = authenModel.password;
-      
-                                            userdb.Role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role;
-    
-                                            connection.Update(userdb);
-                                        }
-                                        else
-                                        {
-                                            connection.Execute("INSERT INTO sjp_user (username, password, role) VALUES (@username, @password, @role)", new {username = model.Username, password = authenModel.password, role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role });
-                                        }
-                                        Response.Cookies.Append("Authorization" , connection.GetList<UserRoleModel>().FirstOrDefault(w => w.Id == authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role).Role == "Admin" ? "sutha" : "danai");
-                                        Response.Cookies.Append("U", model.Username);
-                                        return Ok(new { success = true,msg = "เข้าสู่ระบบสำเร็จ.." });
-                                    }
+                                // Update หรือ Insert ข้อมูลผู้ใช้ลงใน SQLite
                                 
-                                // else if (string.IsNullOrEmpty(SITE_ID))
-                                // {
-                                //     // Set Cookie and Redirect to Config Page
-                                //     Response.Cookies.Append("Authorization", "config");
-                                //     Response.Cookies.Append("U", model.Username);
-                                //     return Ok(new { success = true, msg = "กรุณาตั้งค่า Site ID ก่อนใช้งาน..", redirectUrl = "/Account/Config" });
-                                // }
-                                else
-                                {
-                                    return Ok(new { success = false, msg = "ไม่มีสิทธิ์เข้าใช้งานระบบ.." });
+                                    var userlist = connection.GetList<UserModel>().ToList();
+                                    var userdb = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
+                                    if (userdb != null)
+                                    {
+                                        userdb.Username = model.Username;
+                                        userdb.Password = authenModel.password;
+    
+                                        userdb.Role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role;
+
+                                        connection.Update(userdb);
+                                    }
+                                    else
+                                    {
+                                        connection.Execute("INSERT INTO sjp_user (username, password, role) VALUES (@username, @password, @role)", new {username = model.Username, password = authenModel.password, role = authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role });
+                                    }
+                                    Response.Cookies.Append("Authorization" , connection.GetList<UserRoleModel>().FirstOrDefault(w => w.Id == authenModel.site_access.FirstOrDefault(w => w.Site == SITE_ID).Role).Role == "Admin" ? "sutha" : "danai");
+                                    Response.Cookies.Append("U", model.Username);
+                                    return Ok(new { success = true,msg = "เข้าสู่ระบบสำเร็จ.." });
                                 }
+                            
+                            // else if (string.IsNullOrEmpty(SITE_ID))
+                            // {
+                            //     // Set Cookie and Redirect to Config Page
+                            //     Response.Cookies.Append("Authorization", "config");
+                            //     Response.Cookies.Append("U", model.Username);
+                            //     return Ok(new { success = true, msg = "กรุณาตั้งค่า Site ID ก่อนใช้งาน..", redirectUrl = "/Account/Config" });
+                            // }
+                            else
+                            {
+                                return Ok(new { success = false, msg = "ไม่มีสิทธิ์เข้าใช้งานระบบ.." });
                             }
-                        }
-                        else
-                        {
-                            return Ok(new { success = false, msg = response.Error + " กรุณาติดต่อผู้ดูแลระบบ.." });
                         }
                     }
                     else
                     {
-                        // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
-                        using (var connection = _context.CreateConnection())
+                        return Ok(new { success = false, msg = response.Error + " กรุณาติดต่อผู้ดูแลระบบ.." });
+                    }
+                }
+                else
+                {
+                    // ถ้าเชื่อมต่อไม่ได้ให้เข้าเงื่อนไขที่ใช้ _context เชื่อมต่อ
+                    using (var connection = _context.CreateConnection())
+                    {
+                        var userlist = connection.GetList<UserModel>().ToList();
+                        if (userlist.Any())
                         {
-                            var userlist = connection.GetList<UserModel>().ToList();
-                            if (userlist.Any())
+                            var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
+                            if (user != null)
                             {
-                                var user = userlist.FirstOrDefault(w => w.Username.Equals(model.Username));
-                                if (user != null)
+                                if (VerifyPassword(model.Password, user.Password, GlobalParameter.secretKey))
                                 {
-                                    if (VerifyPassword(model.Password, user.Password, GlobalParameter.secretKey))
-                                    {
-                                        Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
-                                        Response.Cookies.Append("U", user.Username);
-                                        return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
-                                    }
-                                    else
-                                    {
-                                        return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
-                                    }
+                                    Response.Cookies.Append("Authorization", user.Role == "Admin" ? "sutha" : "danai");
+                                    Response.Cookies.Append("U", user.Username);
+                                    return Ok(new { success = true, msg = "เข้าสู่ระบบสำเร็จ.." });
                                 }
                                 else
                                 {
-                                    return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
+                                    return Ok(new { success = false, msg = "รหัสผ่านไม่ถูกต้อง.." });
                                 }
                             }
                             else
                             {
-                                return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
+                                return Ok(new { success = false, msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง.." });
                             }
                         }
+                        else
+                        {
+                            return Ok(new { success = false, msg = "ไม่พบชื่อผู้งานในระบบ" });
+                        }
                     }
-                
+                }
             }
             else
             {
                 return BadRequest();
             }
         }
-
 
         [HttpPost]
         [ActionName("Logout")]

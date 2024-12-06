@@ -60,7 +60,6 @@ namespace SJPCORE.Util
                     // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
                     await _page.ClickAsync("body");
                      
-
                     // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
                     await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }

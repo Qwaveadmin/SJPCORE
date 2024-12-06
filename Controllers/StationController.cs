@@ -494,7 +494,7 @@ namespace SJPCORE.Controllers
                     }
                     else
                     {
-                        if ((await _mqttserver.GetClientsAsync()).Where(w => w.Id == webrtc.target).Count() == 0) return Json(new { success = false, message = $"ขณะนี้สถานี {webrtc.target} ออฟไลน์ควย" });
+                        if ((await _mqttserver.GetClientsAsync()).Where(w => w.Id == webrtc.target).Count() == 0) return Json(new { success = false, message = $"ขณะนี้สถานี {webrtc.target} ออฟไลน์" });
 
                         client_id.Add(webrtc.target);
                     }
