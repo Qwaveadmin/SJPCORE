@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 using PuppeteerSharp.AspNetFramework;
+using SJPCORE.Models.Attribute;
 
 namespace SJPCORE.Util
 {
@@ -20,7 +21,7 @@ namespace SJPCORE.Util
         {
             _logger = logger;
             _url = "http://localhost:5000/rtcmcu"; // URL ของแอปพลิเคชัน ASP.NET ของคุณ
-            _logger.LogInformation($"Puppeteer background service is running for URL: {_url}");
+            _logger.LogWarning($"Puppeteer background service is running for URL: {_url}");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,28 +29,64 @@ namespace SJPCORE.Util
             var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
 
+            // while (!stoppingToken.IsCancellationRequested)
+            // {
+            //     try
+            //     {
+            //         _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            //         {
+            //             Headless = true,
+            //         });
+            //         _page = await _browser.NewPageAsync();
+
+            //         // // สมัครสมาชิกกับเหตุการณ์ Console ของ Puppeteer
+            //         // _page.Console += (sender, e) => 
+            //         // {
+            //         //     _logger.LogInformation($"Browser console message: {e.Message.Text}");
+            //         // };
+                    
+            //         // เพิ่ม HTTP Header เพื่อส่งข้อมูลรับรอง
+                    
+            //         await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+            //         {
+            //             { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
+            //         });
+
+            //         await _page.GoToAsync(_url);
+
+            //         // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
+            //         await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
+
+            //         // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
+            //         await _page.ClickAsync("body");
+                     
+            //         // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
+            //         await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         _logger.LogError(ex, "An error occurred while running Puppeteer.");
+            //     }
+            // }
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
+                    _logger.LogWarning("Puppeteer background service is running again.");
                     _browser = await Puppeteer.LaunchAsync(new LaunchOptions
                     {
                         Headless = true,
                     });
                     _page = await _browser.NewPageAsync();
 
-                    // สมัครสมาชิกกับเหตุการณ์ Console ของ Puppeteer
                     _page.Console += (sender, e) => 
                     {
                         _logger.LogInformation($"Browser console message: {e.Message.Text}");
                     };
-                    
-                    // เพิ่ม HTTP Header เพื่อส่งข้อมูลรับรอง
+
                     await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
                     {
-                        { "X-Custom-Auth", "25c1e9bf-5136-4d61-ac93-651723bdf291" }, // ต้องตรงกับค่าที่กำหนดใน Middleware
-                        { "Authorization", "sutha" }, // เพิ่ม Header Authorization
-                        { "U", "wertring2" }
+                        { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
                     });
 
                     await _page.GoToAsync(_url);
@@ -57,37 +94,68 @@ namespace SJPCORE.Util
                     // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
                     await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
 
-                    // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
                     await _page.ClickAsync("body");
-                     
-                    // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
+
                     await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "An error occurred while running Puppeteer.");
                 }
+                finally
+                {
+                    if (_page != null)
+                    {
+                        await _page.CloseAsync();
+                        _page = null;
+                    }
+                    if (_browser != null)
+                    {
+                        await _browser.CloseAsync();
+                        _browser = null;
+                    }
+                }
             }
+
         }
+
+        // public override async Task StopAsync(CancellationToken cancellationToken)
+        // {
+        //     _logger.LogInformation("Puppeteer background service is stopping.");
+
+        //     await base.StopAsync(cancellationToken);
+        // }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Puppeteer background service is stopping.");
 
+            if (_page != null)
+            {
+                await _page.CloseAsync();
+                _page = null;
+            }
+
+            if (_browser != null)
+            {
+                await _browser.CloseAsync();
+                _browser = null;
+            }
+
             await base.StopAsync(cancellationToken);
         }
+
 
         // Reload the page
         public async void ReloadPageAsync()
         {
             if (_page != null)
             {
+                
                 await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
-                    {
-                        { "X-Custom-Auth", "25c1e9bf-5136-4d61-ac93-651723bdf291" }, // ต้องตรงกับค่าที่กำหนดใน Middleware
-                        { "Authorization", "sutha" }, // เพิ่ม Header Authorization
-                        { "U", "wertring2" }
-                    });
+                {
+                    { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
+                });
 
                 await _page.ReloadAsync();
             }

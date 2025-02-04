@@ -561,14 +561,23 @@
                                 timer: 3000,
                             })
                         }
-
                     },
-                    error: function (error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด...',
-                            text: error.responseText,
-                        })
+                    error: function (xhr, status, error) {
+                        if (xhr.status === 403) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'ไม่มีสิทธิ์เข้าถึง',
+                                text: 'คุณไม่มีสิทธิ์ในการดำเนินการนี้',
+                                timer: 3000,
+                            })
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: xhr.responseText || 'เกิดข้อผิดพลาดในการดำเนินการ',
+                                timer: 3000,
+                            })
+                        }
                     }
                 });
             }else{
@@ -602,14 +611,23 @@
                                 timer: 3000,
                             })
                         }
-
                     },
-                    error: function (error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด...',
-                            text: error.responseText,
-                        })
+                    error: function (xhr, status, error) {
+                        if (xhr.status === 403) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'ไม่มีสิทธิ์เข้าถึง',
+                                text: 'คุณไม่มีสิทธิ์ในการดำเนินการนี้',
+                                timer: 3000,
+                            })
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด...',
+                                text: xhr.responseText || 'เกิดข้อผิดพลาดในการดำเนินการ',
+                                timer: 3000,
+                            })
+                        }
                     }
                 });
             }

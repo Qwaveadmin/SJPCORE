@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SJPCORE.Models;
+using SJPCORE.Models.Attribute;
 
 namespace SJPCORE.Controllers
 {
+    [InternalOnly]
     [Route("[controller]")]
     public class RTCMCUController : Controller
     {

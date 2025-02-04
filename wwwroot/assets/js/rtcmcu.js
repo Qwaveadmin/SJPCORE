@@ -33,8 +33,12 @@ AgoraRTC.setLogLevel(3);
                 .build();
 
             srconnection.on('ClientConnected', async function (message) {
-                console.log("message-core", message);
                 const messageobj = JSON.parse(message);
+                //if messageobj.cmd != "state"
+                if (messageobj.type != "state") {
+                    console.log("message-core", message);
+                }
+
                 if (messageobj.type == "offer") {
                 await peerConnections[messageobj.user].setRemoteDescription(messageobj.message);
                 const answer = await peerConnections[messageobj.id].createAnswer();

@@ -90,7 +90,7 @@
                 @if (SJPCORE.Util.HTMLHelper.IsAdmin(Context))
                 {
                     <li class="menu-title fs-13"><span data-key="t-menu">ผู้ดูเเลระบบ</span></li>
-                    <li class="nav-item">
+                    @* <li class="nav-item">
                         <a class="nav-link menu-link" href="#usermanage" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarDashboards">
                             <i class="ri ri-user-line"></i> <span data-key="t-dashboards">จัดการผู้ใช้งาน</span>
@@ -102,7 +102,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </li>
+                    </li> *@
 
                     <a class="nav-link menu-link" href="@Url.Action("Server", "Status").ToLower()" role="button">
                         <i class="ri  ri-server-line"></i> <span data-key="t-dashboards">MQTT Broker</span>

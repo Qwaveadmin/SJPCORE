@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 using SJPCORE.Models;
 using Microsoft.AspNetCore.Connections;
 using SJPCORE.Models.Attribute;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SJPCORE.Controllers
 {
-    [AuthorizationHeader]
+    [Authorize(Policy = "RequireAdmin")]
     public class SettingsController : Controller
     {
         private readonly ILogger<DashBoardController> _logger;

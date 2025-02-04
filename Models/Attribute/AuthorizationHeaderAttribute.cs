@@ -14,10 +14,10 @@ namespace SJPCORE.Models.Attribute
                 base.OnActionExecuting(context);
                 return;
             }
-            if (!context.HttpContext.Request.Cookies.ContainsKey("Authorization"))
-            {
-                context.Result = new RedirectToActionResult("SignIn", "Account", null);
-            }
+            // if (!context.HttpContext.Request.Cookies.ContainsKey("Authorization"))
+            // {
+            //     context.Result = new RedirectToActionResult("SignIn", "Account", null);
+            // }
             //Check Configuration
             //Site ID
             //Host URL

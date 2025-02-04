@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Dapper;
 using SJPCORE.Models.Site;
 
 namespace SJPCORE.Models

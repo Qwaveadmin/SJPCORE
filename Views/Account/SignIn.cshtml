@@ -5,6 +5,7 @@
 
 <!doctype html>
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg">
+
 <head>
     @Html.Partial("~/Views/Shared/_title_meta.cshtml")
     @Html.Partial("~/Views/Shared/_head_css.cshtml")
@@ -13,92 +14,126 @@
     <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 
     <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+<style>
+    input[type="password"] {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+    }
+    
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear,
+    input[type="password"]::-webkit-contacts-auto-fill-button,
+    input[type="password"]::-webkit-credentials-auto-fill-button {
+        display: none !important;
+    }
+
+    /* เพิ่ม !important เพื่อให้มั่นใจว่าจะ override ทุก style */
+    .position-relative input[type="password"]::after,
+    .position-relative input[type="password"]::before {
+        display: none !important;
+    }
+</style>
 </head>
+
 <body>
 
-     <div class="auth-page-wrapper pt-5">
-            <!-- auth page content -->
-            <div class="auth-page-content">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="text-center mt-sm-5 mb-2 text-white-50">
-                                <div>
-                                    <a href="@Url.Action("Index", "Dashboard")" class="d-inline-block auth-logo">
-                                        <img src="~/assets/images/logo-dark.png" alt="" height="80">
-                                    </a>
-                                </div>
-                  
+    <div class="auth-page-wrapper pt-5">
+        <!-- auth page content -->
+        <div class="auth-page-content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center mt-sm-5 mb-2 text-white-50">
+                            <div>
+                                <a href="@Url.Action("Index", "Dashboard")" class="d-inline-block auth-logo">
+                                    <img src="~/assets/images/logo-dark.png" alt="" height="80">
+                                </a>
                             </div>
-                        </div>
-                    </div>
-                    <!-- end row -->
-
-                    <div class="row justify-content-center">
-                        <div class="col-md-8 col-lg-6 col-xl-5">
-                            <div class="card mt-4">
-                            
-                                <div class="card-body p-4"> 
-                                    <div class="text-center mt-2">
-                                    <h5 class="text-dark">@GlobalParameter.Config.Where(w=>w.key=="STATION_NAME").FirstOrDefault().value</h5>
-                                    <p class="text-muted">@GlobalParameter.Config.Where(w=>w.key=="SLOGAN").FirstOrDefault().value</p>
-                                    </div>
-                                    <div class="p-2 mt-4">
-
-            
-                                            <div class="mb-3">
-                                                <label for="username" class="form-label">ชื่อผู้ใช้</label>
-                                                <input type="text" class="form-control" id="username" placeholder="โปรดระบุชื่อผู้ใช้">
-                                            </div>
-                    
-                                            <div class="mb-3">
-
-                                                <label class="form-label" for="password-input">รหัสผ่าน</label>
-                                                <div class="position-relative auth-pass-inputgroup mb-3">
-                                                    <input type="password" class="form-control pe-5 password-input" placeholder="โปรดระบุรหัสผ่าน" id="password-input">
-                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                                                </div>
-                                            </div>
-
-            
-                                            
-                                            <div class="mt-4">
-                                        <button class="btn btn-warning w-100 text-dark" id="save" type="submit">เข้าสู่ระบบ</button>
-                                            </div>
-
-                                          
-                
-                                    </div>
-                                </div>
-                                <!-- end card body -->
-                            </div>
-                            <!-- end card -->
-
-                           
 
                         </div>
                     </div>
-                    <!-- end row -->
                 </div>
-                <!-- end container -->
+                <!-- end row -->
+
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6 col-xl-5">
+                        <div class="card mt-4">
+
+                            <div class="card-body p-4">
+                                <div class="text-center mt-2">
+                                    <h5 class="text-dark">
+                                        @GlobalParameter.Config.Where(w => w.key == "STATION_NAME").FirstOrDefault().value
+                                    </h5>
+                                    <p class="text-muted">
+                                        @GlobalParameter.Config.Where(w => w.key == "SLOGAN").FirstOrDefault().value</p>
+                                </div>
+                                <div class="p-2 mt-4">
+
+
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">ชื่อผู้ใช้</label>
+                                        <input type="text" class="form-control" id="username"
+                                            placeholder="โปรดระบุชื่อผู้ใช้">
+                                    </div>
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">รหัสผ่าน</label>
+                                        <div class="position-relative mb-3">
+                                            <input type="password" class="form-control pe-5"
+                                                placeholder="โปรดระบุรหัสผ่าน" id="password-input">
+                                            <button
+                                                class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
+                                                type="button">
+                                                <i id="togglePassword" class="ri-eye-fill align-middle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+
+                                    <div class="mt-4">
+                                        <button class="btn btn-warning w-100 text-dark" id="save"
+                                            type="submit">เข้าสู่ระบบ</button>
+                                    </div>
+
+
+
+                                </div>
+                            </div>
+                            <!-- end card body -->
+                        </div>
+                        <!-- end card -->
+
+
+
+                    </div>
+                </div>
+                <!-- end row -->
             </div>
-            <!-- end auth page content -->
+            <!-- end container -->
+        </div>
+        <!-- end auth page content -->
 
-            <!-- footer -->
-            <footer class="footer">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="text-center">
-                            <p class="mb-0 text-muted">  @GlobalParameter.Config.Where(w=>w.key=="FOOTER").FirstOrDefault().value Crafted with <i class="mdi mdi-heart text-danger"></i></p>
-                            </div>
+        <!-- footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">
+                                @GlobalParameter.Config.Where(w => w.key == "FOOTER").FirstOrDefault().value Crafted with <i
+                                    class="mdi mdi-heart text-danger"></i></p>
                         </div>
                     </div>
                 </div>
-            </footer>
-            <!-- end Footer -->
-        </div>
-        <!-- end auth-page-wrapper -->
+            </div>
+        </footer>
+        <!-- end Footer -->
+    </div>
+    <!-- end auth-page-wrapper -->
 
     @Html.Partial("~/Views/Shared/_vendor_scripts.cshtml")
 
@@ -106,15 +141,11 @@
     <script src="~/assets/libs/particles.js/particles.js"></script>
     <!-- particles app js -->
     <script src="~/assets/js/pages/particles.app.js"></script>
-    <!-- password-addon init -->
-    <script src="~/assets/js/pages/password-addon.init.js"></script>
 
 </body>
 
 
 <script>
-
-
 
     $(document).ready(function () {
         $('#save').click(function (e) {
@@ -125,6 +156,16 @@
                 password: $('#password-input').val(),
             };
 
+            // Show loading spinner
+            Swal.fire({
+                title: 'Please wait...',
+                text: 'Processing your request',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 type: "POST",
                 url: "/account/signin",
@@ -132,9 +173,10 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (response) {
+                    Swal.close(); // Close the loading spinner
                     if (response.success) {
                         if (response.redirectUrl) {
-                            window.location = response.redirectUrl; // Redirect ไปยัง URL ที่เซิร์ฟเวอร์บอกมา
+                            window.location = response.redirectUrl; // Redirect to the URL provided by the server
                         } else {
                             Swal.fire({
                                 icon: 'success',
@@ -150,26 +192,34 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response.msg,
-                            timer: 3000
+                            text: response.msg
                         });
                     }
                 },
-                error: function (error) {
+                error: function () {
+                    Swal.close(); // Close the loading spinner
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: error.responseJSON?.msg || 'An error occurred',
-                        timer: 3000
+                        text: 'An error occurred while processing your request.'
                     });
                 }
             });
         });
     });
+
+    $('#togglePassword').click(function () {
+        var passwordInput = $('#password-input');
+        var type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+        passwordInput.attr('type', type);
+
+        // Toggle the icon class
+        $(this).toggleClass('ri-eye-fill ri-eye-off-fill');
+    });
+
+
 </script>
 
 <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 </html>
-
-                

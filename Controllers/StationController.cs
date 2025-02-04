@@ -8,27 +8,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SJPCORE.Models;
-using Microsoft.AspNetCore.Connections;
 using MQTTnet.Client;
 using MQTTnet;
-using System.Text;
 using MQTTnet.Server;
-using Org.BouncyCastle.Utilities.Encoders;
-using Microsoft.VisualBasic;
-using System.IO;
 using Microsoft.AspNetCore.Authorization;
 using SJPCORE.Models.Attribute;
-using System.Xml.Linq;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using System.Collections;
 using System.Threading;
 using Dapper.Contrib.Extensions;
 using SJPCORE.Models.Mqtt;
 
 namespace SJPCORE.Controllers
 {
-    [AuthorizationHeader]
+    [Authorize]
     public class StationController : Controller
     {
         private readonly ILogger<StationController> _logger;
@@ -144,6 +135,7 @@ namespace SJPCORE.Controllers
             return Ok(new { success = true, message = list_result });
         }
 
+        [Authorize(Policy = "RequireAdmin")]
         [HttpPost("station/create")]
         public async Task<ActionResult> create_assign([FromBody] StationModel body)
         {
@@ -250,6 +242,7 @@ namespace SJPCORE.Controllers
             }
         }
 
+        [Authorize(Policy = "RequireAdmin")]
         [HttpDelete("station/del/{key}")]
         public async Task<ActionResult> delete_station(string key)
         {

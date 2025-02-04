@@ -12,11 +12,13 @@ using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SJPCORE.Controllers.Api
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "RequireAdmin")]
     public class SettingsController : ControllerBase
     {
         private readonly DapperContext _context;

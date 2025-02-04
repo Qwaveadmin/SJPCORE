@@ -3,7 +3,7 @@ using System;
 
 namespace SJPCORE.Models
 {
-    [Table("sjp_setting")]
+    [Table("sjp_setting")] 
     public class ConfigModel
     {
         

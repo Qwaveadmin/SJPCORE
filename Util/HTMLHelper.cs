@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace SJPCORE.Util
 {
@@ -20,20 +22,11 @@ namespace SJPCORE.Util
 
         public static bool IsAdmin(HttpContext context)
         {
-            if (context.Request.Cookies.ContainsKey("Authorization"))
+            var authorizationService = context.RequestServices.GetRequiredService<IAuthorizationService>();
+
+            if (authorizationService.AuthorizeAsync(context.User, "RequireAdmin").Result.Succeeded)
             {
-                string value = context.Request.Cookies["Authorization"];
-
-
-                if(value == "sutha")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-
+                return true;
             }
             else
             {
@@ -44,22 +37,40 @@ namespace SJPCORE.Util
 
         public static string GetRole(HttpContext context)
         {
-            return IsAdmin(context) ? "ผู้ดูแลระบบ" : "ผู้ใช้งาน";
+            // ดึงจาก Claims Identity
+            if (context.User?.Identity?.IsAuthenticated == true)
+            {
+                // ดึง IAuthorizationService จาก DI
+                var authorizationService = context.RequestServices.GetRequiredService<IAuthorizationService>();
+                
+                // ใช้ .Result แทน await
+                if (authorizationService.AuthorizeAsync(context.User, "RequireAdmin").Result.Succeeded)
+                {
+                    return "Admin";
+                }
+                else
+                {
+                    return "User"; 
+                }
+            }
+            return "Guest";
         }
 
         public static string GetUsername(HttpContext context)
         {
-            if (context.Request.Cookies.ContainsKey("U"))
+            // ดึงจาก Claims Identity
+            if (context.User?.Identity?.IsAuthenticated == true)
             {
-                string value = context.Request.Cookies["U"];
-
-                return value;
-
+                return context.User.Identity.Name;
             }
-            else
+            
+            // หรือดึงจาก Cookie โดยตรง
+            if (context.Request.Cookies.TryGetValue("U", out string username))
             {
-                return "error";
+                return username;
             }
+
+            return "Guest";
         }
     }
 }
