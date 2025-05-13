@@ -20,7 +20,7 @@ namespace SJPCORE.Util
         public PuppeteerBackgroundService(ILogger<PuppeteerBackgroundService> logger)
         {
             _logger = logger;
-            _url = "http://localhost:5000/rtcmcu"; // URL ของแอปพลิเคชัน ASP.NET ของคุณ
+            _url = "http://localhost:5000/rtcmcu";
             _logger.LogWarning($"Puppeteer background service is running for URL: {_url}");
         }
 
@@ -29,124 +29,75 @@ namespace SJPCORE.Util
             var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
 
-            // while (!stoppingToken.IsCancellationRequested)
-            // {
-            //     try
-            //     {
-            //         _browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            //         {
-            //             Headless = true,
-            //         });
-            //         _page = await _browser.NewPageAsync();
-
-            //         // // สมัครสมาชิกกับเหตุการณ์ Console ของ Puppeteer
-            //         // _page.Console += (sender, e) => 
-            //         // {
-            //         //     _logger.LogInformation($"Browser console message: {e.Message.Text}");
-            //         // };
-                    
-            //         // เพิ่ม HTTP Header เพื่อส่งข้อมูลรับรอง
-                    
-            //         await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
-            //         {
-            //             { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
-            //         });
-
-            //         await _page.GoToAsync(_url);
-
-            //         // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
-            //         await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
-
-            //         // เพิ่มการคลิกจำลองเพื่อให้สามารถเริ่ม AudioContext ได้
-            //         await _page.ClickAsync("body");
-                     
-            //         // รอสักครู่ก่อนที่จะรีเฟรชหน้าเว็บใหม่
-            //         await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         _logger.LogError(ex, "An error occurred while running Puppeteer.");
-            //     }
-            // }
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    _logger.LogWarning("Puppeteer background service is running again.");
-                    _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                    // เปิด Browser และหน้าเว็บ (ถ้ายังไม่มี)
+                    if (_browser == null || _browser.IsClosed)
                     {
-                        Headless = true,
-                    });
-                    _page = await _browser.NewPageAsync();
+                        _logger.LogInformation("Starting new browser instance...");
+                        _browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+                    }
 
-                    _page.Console += (sender, e) => 
+                    if (_page == null || _page.IsClosed)
                     {
-                        _logger.LogInformation($"Browser console message: {e.Message.Text}");
-                    };
+                        _logger.LogInformation("Opening new page...");
+                        _page = await _browser.NewPageAsync();
 
-                    await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
-                    {
-                        { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
-                    });
+                        _page.Console += (sender, e) => 
+                        {
+                            _logger.LogInformation($"Browser console message: {e.Message.Text}");
+                        };
 
-                    await _page.GoToAsync(_url);
+                        // ตั้งค่า Header และเปิด URL
+                        await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+                        {
+                            { InternalRequestFlag.INTERNAL_REQUEST_KEY, InternalRequestFlag.INTERNAL_REQUEST_VALUE }
+                        });
 
-                    // เอา HTTP Header ออกหลังจากโหลดหน้าเว็บเสร็จแล้ว
-                    await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
+                        await _page.GoToAsync(_url);
+                        await _page.SetExtraHttpHeadersAsync(new Dictionary<string, string>());
+                        await _page.ClickAsync("body");
+                    }
 
-                    await _page.ClickAsync("body");
-
+                    // รอ 5 นาทีแล้วตรวจสอบสถานะอีกครั้ง
                     await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogInformation("Service was canceled.");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "An error occurred while running Puppeteer.");
-                }
-                finally
-                {
-                    if (_page != null)
-                    {
-                        await _page.CloseAsync();
-                        _page = null;
-                    }
-                    if (_browser != null)
-                    {
-                        await _browser.CloseAsync();
-                        _browser = null;
-                    }
+                    _logger.LogError(ex, "An error occurred. Restarting browser...");
+                    await CleanupResources(); // ปิด Browser และหน้าเว็บก่อนเริ่มใหม่
                 }
             }
-
         }
 
-        // public override async Task StopAsync(CancellationToken cancellationToken)
-        // {
-        //     _logger.LogInformation("Puppeteer background service is stopping.");
-
-        //     await base.StopAsync(cancellationToken);
-        // }
-
-        public override async Task StopAsync(CancellationToken cancellationToken)
+        // ปิด Browser และหน้าเว็บ
+        private async Task CleanupResources()
         {
-            _logger.LogInformation("Puppeteer background service is stopping.");
-
             if (_page != null)
             {
                 await _page.CloseAsync();
                 _page = null;
             }
-
             if (_browser != null)
             {
                 await _browser.CloseAsync();
                 _browser = null;
             }
+        }
 
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Stopping Puppeteer service.");
+            await CleanupResources();
             await base.StopAsync(cancellationToken);
         }
 
-
-        // Reload the page
         public async void ReloadPageAsync()
         {
             if (_page != null)

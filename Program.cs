@@ -3,10 +3,11 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.AspNetCore;
 using System.Threading;
 using System;
-using SJPCORE.Controllers;
 using System.Diagnostics;
-using Dapper;
 using System.Windows.Forms;
+using Serilog;
+using Serilog.Sinks.Syslog;
+using SJPCORE.Controllers;
 
 namespace SJPCORE
 {
@@ -50,10 +51,46 @@ namespace SJPCORE
             // สร้าง Thread สำหรับ ASP.NET Core Web Host
             Thread webHostThread = new Thread(() =>
             {
-                var host = CreateHostBuilder(args).Build();
-                var url = "http://localhost:5000";
-                OpenBrowser(url);
-                host.Run();
+                // var host = CreateHostBuilder(args).Build();
+                // var url = "http://localhost:5000";
+                // OpenBrowser(url);
+                // host.Run();
+
+                // Log.Logger = new LoggerConfiguration()
+                //     .MinimumLevel.Debug()
+                //     .WriteTo.Console()
+                //     .WriteTo.Syslog(
+                //         host: "your-syslog-server",
+                //         port: 514,
+                //         appName: "SJPCORE",
+                //         facility: SyslogFacility.Local0,
+                //         protocol: SyslogProtocol.Udp,
+                //         format: SyslogFormat.RFC5424
+                //     )
+                //     .CreateLogger();
+
+                try
+                {
+                    Log.Information("Starting web host");
+                    var host = CreateHostBuilder(args).Build();
+                    var url = "http://localhost:5000";
+                    OpenBrowser(url);
+                    host.Run();
+                }
+                catch (Exception ex)
+                {
+                    Log.Fatal(ex, "Host terminated unexpectedly");
+                }
+                finally
+                {
+                    Log.CloseAndFlush();
+                }
+            });
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                StationController.DeletePassed();
+                _timer = new System.Threading.Timer(RunSchedule, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
             });
 
             webHostThread.Start();
@@ -71,6 +108,15 @@ namespace SJPCORE
                         o.ListenAnyIP(11257, l => l.UseMqtt());
                     });
                 });
+
+        private static void RunSchedule(object state)
+        {
+            // Run the code on a separate thread to avoid blocking the main thread
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                StationController.CheckScheduleAsync(state);
+            });
+        }
 
         private static void OpenBrowser(string url)
         {
