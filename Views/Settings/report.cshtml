@@ -1,0 +1,528 @@
+@{
+    ViewBag.Title = "ส่งออกรายงาน";
+    ViewBag.pTitle = "ส่งออกรายงาน";
+    ViewBag.pageTitle = "ส่งออกรายงาน";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <!-- โหลด CSS สำหรับ jsvectormap เพื่อใช้แสดงผลแผนที่ -->
+    <link href="~/assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- โหลด CSS สำหรับ Swiper slider เพื่อใช้ในส่วน carousel -->
+    <link href="~/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- โหลด jQuery เพื่อใช้ในการจัดการ DOM และ AJAX -->
+    <script src="~/assets/libs/jquery/jquery-3.6.3.min.js"></script>
+
+    <!-- โหลด CSS สำหรับ Sweet Alert เพื่อใช้แสดง popup แจ้งเตือน -->
+    <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- โหลด CSS สำหรับ Bootstrap Pagination เพื่อใช้ในส่วนหน้า/ถอยหน้า -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .uniform-input {
+            height: 38px !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .row-aligned {
+            align-items: flex-end;
+        }
+
+        /* กำหนดความสูงให้รายการสถานี เพื่อให้มองเห็นรายการได้ 5-10 รายการ */
+        #stationList {
+            /* กำหนดความสูงคงที่เพื่อให้เหมาะสม ไม่เต็มจอเกินไป */
+            height: 200px; /* ความสูง 200px เพื่อให้มองเห็น 5-10 รายการ */
+            overflow-y: auto; /* เพิ่ม scroll ถ้ารายการยาวเกิน */
+            border: 1px solid #ced4da; /* เพิ่มขอบเพื่อให้มองเห็นชัดเจน */
+        }
+
+        .pagination-container {
+            margin-top: 10px;
+        }
+
+        #previewSection {
+            display: none;
+        }
+
+        /* กำหนดความสูงให้ส่วน Preview เพื่อให้เหมาะสมสำหรับการแสดงตัวอย่างไฟล์ */
+        .preview-file {
+            margin-top: 20px;
+            width: 100%;
+            /* กำหนดความสูงคงที่เพื่อให้เหมาะสม ไม่เต็มจอเกินไป */
+            height: 400px; /* ความสูง 400px เพื่อให้เหมาะสมสำหรับการแสดงตัวอย่าง */
+            border: 1px solid #ccc;
+        }
+
+        /* ขยาย Card ให้เต็มความสูงของหน้าจอ */
+        .card {
+            /* คำนวณความสูงให้ Card ขยายเต็มหน้าจอ โดยลบส่วน header/footer ด้านนอก Card */
+            min-height: calc(100vh - 120px); /* 120px คือส่วน header/footer ด้านนอก Card */
+            margin-bottom: 0; /* ลบ margin ล่างเพื่อไม่ให้มีช่องว่างเกิน */
+        }
+
+        /* ปรับ Card body ให้ขยายตาม Card */
+        .card-body {
+            padding: 1.5rem;
+            /* คำนวณความสูงให้ Card body ขยายตาม Card โดยลบส่วน Card header และ header/footer */
+            min-height: calc(100vh - 180px); /* 180px คือส่วน header/footer (120px) + Card header (60px) */
+        }
+
+        /* ปรับ container ให้เต็มความสูง */
+        .col-xxl-12 {
+            height: 100%;
+            padding: 0; /* ลบ padding เพื่อใช้พื้นที่ให้เต็ม */
+        }
+
+        /* ปรับให้เลย์เอาต์ทั้งหน้าเต็มความสูง */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+}
+
+<div class="col-xxl-12">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <!-- แสดงส่วนหัวของหน้า -->
+            <h4 class="mx-1 my-2 text-primary">ส่งออกรายงาน</h4>
+            <button type="button" class="btn btn-primary btn-label waves-effect right waves-light" id="exportReport">
+                <i class="ri-download-line label-icon align-middle fs-16 ms-2"></i>ส่งออกรายงาน
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- ส่วนฟอร์มสำหรับกรอกข้อมูล -->
+            <div id="reportForm">
+                <label class="mx-2 text-muted font-weight-normal">เลือกประเภทรายงานและช่วงวันที่เพื่อส่งออกรายงาน</label>
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-2 mb-3 border-bottom"></div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="ri-file-line text-muted me-1"></i><strong>เลือกประเภทรายงาน</strong></label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="activityReport" value="activity">
+                        <label class="form-check-label" for="activityReport">สรุปกิจกรรมการใช้งาน Site</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="SiteReport" value="site">
+                        <label class="form-check-label" for="SiteReport">สรุปการทำงานของ Site</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="NodeReport" value="node">
+                        <label class="form-check-label" for="NodeReport">สรุปการทำงานของ สถานี</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="LogsExport" value="log">
+                        <label class="form-check-label" for="LogsExport">ส่งออก Data Logs</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="ri-calendar-line text-muted me-1"></i><strong>ช่วงวันที่</strong></label>
+                    <div class="row row-aligned">
+                        <div class="col-md-4 form-group">
+                            <select class="form-control uniform-input" id="dateRange">
+                                <option value="today">วันนี้</option>
+                                <option value="thisWeek">สัปดาห์นี้</option>
+                                <option value="thisMonth">เดือนนี้</option>
+                                <option value="thisYear">ปีนี้</option>
+                                <option value="custom">กำหนดเอง</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label for="startDate" class="form-label mb-1">วันที่เริ่มต้น</label>
+                            <input type="date" class="form-control uniform-input" id="startDate" placeholder="วันที่เริ่มต้น">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label for="endDate" class="form-label mb-1">วันที่สิ้นสุด</label>
+                            <input type="date" class="form-control uniform-input" id="endDate" placeholder="วันที่สิ้นสุด">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reportFormat" class="form-label"><i class="ri-file-line text-muted me-1"></i><strong>รูปแบบไฟล์</strong></label>
+                    <select class="form-control" id="reportFormat">
+                        <option value="csv">CSV</option>
+                        <option value="pdf">PDF</option>
+                    </select>
+                </div>
+
+                <div class="mb-3" id="stationSelection">
+                    <label class="form-label"><i class="ri ri-base-station-line text-muted me-1"></i><strong>เลือกสถานี</strong></label>
+                    <div class="row align-items-center mb-2">
+                        <div class="col-md-6">
+                            <select class="form-control" id="stationMode">
+                                <option value="group">แบบกลุ่ม</option>
+                                <option value="single">แบบเดี่ยว</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex justify-content-end align-items-center">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" id="selectAllStations">
+                                <label class="form-check-label" for="selectAllStations">เลือกทั้งหมด</label>
+                            </div>
+                            <div>
+                                <label for="itemsPerPage" class="form-label me-2">จำนวนรายการต่อหน้า:</label>
+                                <select class="form-control" id="itemsPerPage" style="width: 100px; display: inline-block;">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="stationList" class="border p-3">
+                        <!-- รายการสถานี/กลุ่มจะถูกแสดงที่นี่ -->
+                    </div>
+                    <div class="pagination-container">
+                        <ul class="pagination" id="pagination"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ส่วน Preview สำหรับแสดงตัวอย่างรายงาน -->
+            <div id="previewSection">
+                <h5 class="text-primary">ตัวอย่างรายงาน</h5>
+                <div class="preview-file">
+                    <iframe id="filePreview" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+                <button type="button" class="btn btn-success btn-label waves-effect right waves-light" id="downloadReport">
+                    <i class="ri-download-line label-icon align-middle fs-16 ms-2"></i>ดาวน์โหลดรายงาน
+                </button>
+                <button type="button" class="btn btn-secondary btn-label waves-effect right waves-light ms-2" id="backToForm">
+                    <i class="ri-arrow-left-line label-icon align-middle fs-16 ms-2"></i>กลับไปแก้ไข
+                </button>
+            </div>
+        </div><!-- สิ้นสุด card-body -->
+    </div><!-- สิ้นสุด card -->
+</div>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            let downloadUrl = '';
+
+            // ปิดการใช้งานช่องวันที่เริ่มต้นและสิ้นสุดในตอนแรก
+            $('#startDate').prop('disabled', true);
+            $('#endDate').prop('disabled', true);
+
+            // ฟังก์ชันสำหรับตรวจสอบและจัดการการ Disable/Enable ส่วนเลือกสถานี
+            function toggleStationSelection() {
+                const isNodeReportChecked = $('#NodeReport').is(':checked');
+                const isLogsExportChecked = $('#LogsExport').is(':checked');
+                const shouldEnable = isNodeReportChecked || isLogsExportChecked;
+
+                // ถ้าไม่ได้เลือกทั้ง "สรุปการทำงานของ สถานี" และ "ส่งออก Data Logs" ให้ Disable ทุกส่วนที่เกี่ยวกับการเลือกสถานี
+                $('#stationMode').prop('disabled', !shouldEnable);
+                $('#selectAllStations').prop('disabled', !shouldEnable);
+                $('#itemsPerPage').prop('disabled', !shouldEnable);
+                $('.station-checkbox').prop('disabled', !shouldEnable);
+                $('#pagination').find('.page-link').each(function() {
+                    $(this).toggleClass('disabled', !shouldEnable);
+                    $(this).prop('disabled', !shouldEnable);
+                });
+
+                // ถ้า Disable ให้เคลียร์การเลือกทั้งหมด
+                if (!shouldEnable) {
+                    $('#selectAllStations').prop('checked', false);
+                    $('.station-checkbox').prop('checked', false);
+                }
+            }
+
+            // เรียกใช้ฟังก์ชัน toggleStationSelection เมื่อเริ่มต้น
+            toggleStationSelection();
+
+            // ตรวจสอบการเปลี่ยนแปลงของ checkbox "สรุปการทำงานของ สถานี" และ "ส่งออก Data Logs"
+            $('#NodeReport, #LogsExport').change(function() {
+                toggleStationSelection();
+            });
+
+            // จัดการการเลือกช่วงวันที่
+            $('#dateRange').change(function () {
+                var selectedRange = $(this).val();
+                if (selectedRange === 'custom') {
+                    $('#startDate').prop('disabled', false);
+                    $('#endDate').prop('disabled', false);
+                } else {
+                    $('#startDate').prop('disabled', true);
+                    $('#endDate').prop('disabled', true);
+                }
+            });
+
+            // ข้อมูล Mock สำหรับกลุ่มและสถานี (ต้องเปลี่ยนไปเรียก API จริง)
+            const groups = [
+                { id: 1, name: 'กลุ่ม A' },
+                { id: 2, name: 'กลุ่ม B' },
+                { id: 3, name: 'กลุ่ม C' },
+                { id: 4, name: 'กลุ่ม D' },
+                { id: 5, name: 'กลุ่ม E' },
+                { id: 6, name: 'กลุ่ม F' },
+                { id: 7, name: 'กลุ่ม G' },
+                { id: 8, name: 'กลุ่ม H' }
+            ];
+            const stations = [
+                { id: 1, name: 'สถานี 1' },
+                { id: 2, name: 'สถานี 2' },
+                { id: 3, name: 'สถานี 3' },
+                { id: 4, name: 'สถานี 4' },
+                { id: 5, name: 'สถานี 5' },
+                { id: 6, name: 'สถานี 6' },
+                { id: 7, name: 'สถานี 7' },
+                { id: 8, name: 'สถานี 8' },
+                { id: 9, name: 'สถานี 9' },
+                { id: 10, name: 'สถานี 10' }
+            ];
+
+            let currentItems = groups;
+            let currentPage = 1;
+            let itemsPerPage = parseInt($('#itemsPerPage').val());
+
+            // ฟังก์ชันสำหรับแสดงรายการสถานี/กลุ่มพร้อม pagination
+            function renderStationList(mode, page = 1) {
+                $('#stationList').empty();
+                currentItems = mode === 'group' ? groups : stations;
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedItems = currentItems.slice(startIndex, endIndex);
+
+                paginatedItems.forEach(item => {
+                    $('#stationList').append(`
+                        <div class="form-check">
+                            <input class="form-check-input station-checkbox" type="checkbox" value="${item.id}" id="${mode}-${item.id}">
+                            <label class="form-check-label" for="${mode}-${item.id}">${item.name}</label>
+                        </div>
+                    `);
+                });
+
+                renderPagination(mode);
+
+                // เรียกใช้ toggleStationSelection เพื่ออัปเดตสถานะ Disable/Enable หลังจาก render
+                toggleStationSelection();
+            }
+
+            // ฟังก์ชันสำหรับแสดง pagination
+            function renderPagination(mode) {
+                $('#pagination').empty();
+                const totalPages = Math.ceil(currentItems.length / itemsPerPage);
+
+                if (totalPages > 1) {
+                    $('#pagination').append(`
+                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" tabindex="-1" data-page="${currentPage - 1}">Previous</a>
+                        </li>
+                    `);
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        $('#pagination').append(`
+                            <li class="page-item ${currentPage === i ? 'active' : ''}">
+                                <a class="page-link" href="#" data-page="${i}">${i}</a>
+                            </li>
+                        `);
+                    }
+
+                    $('#pagination').append(`
+                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
+                        </li>
+                    `);
+                }
+
+                // เรียกใช้ toggleStationSelection เพื่ออัปเดตสถานะ Disable/Enable หลังจาก render
+                toggleStationSelection();
+            }
+
+            // จัดการการเปลี่ยนหน้า
+            $('#pagination').on('click', '.page-link', function (e) {
+                e.preventDefault();
+                const mode = $('#stationMode').val();
+                const newPage = parseInt($(this).data('page'));
+                if (newPage > 0 && newPage <= Math.ceil(currentItems.length / itemsPerPage)) {
+                    currentPage = newPage;
+                    renderStationList(mode, currentPage);
+                    $('#selectAllStations').prop('checked', false);
+                }
+            });
+
+            // จัดการการเปลี่ยนจำนวนรายการต่อหน้า
+            $('#itemsPerPage').change(function () {
+                itemsPerPage = parseInt($(this).val());
+                currentPage = 1;
+                const mode = $('#stationMode').val();
+                renderStationList(mode, currentPage);
+                $('#selectAllStations').prop('checked', false);
+            });
+
+            // แสดงรายการสถานีเริ่มต้น
+            renderStationList('group');
+
+            // จัดการการเปลี่ยนโหมดสถานี (กลุ่ม/เดี่ยว)
+            $('#stationMode').change(function () {
+                const mode = $(this).val();
+                currentPage = 1;
+                renderStationList(mode, currentPage);
+                $('#selectAllStations').prop('checked', false);
+            });
+
+            // จัดการ checkbox เลือกทั้งหมด
+            $('#selectAllStations').change(function () {
+                $('.station-checkbox').prop('checked', $(this).is(':checked'));
+            });
+
+            // จัดการ checkbox รายการเดี่ยวเพื่ออัปเดตสถานะเลือกทั้งหมด
+            $('#stationList').on('change', '.station-checkbox', function () {
+                const allChecked = $('.station-checkbox').length === $('.station-checkbox:checked').length;
+                $('#selectAllStations').prop('checked', allChecked);
+            });
+
+            $('#exportReport').click(function (e) {
+                e.preventDefault();
+
+                // รวบรวมประเภทรายงานที่เลือก
+                var reportTypes = [];
+                if ($('#activityReport').is(':checked')) reportTypes.push('activity');
+                if ($('#SiteReport').is(':checked')) reportTypes.push('site');
+                if ($('#NodeReport').is(':checked')) reportTypes.push('node');
+                if ($('#LogsExport').is(':checked')) reportTypes.push('log');
+
+                // ตรวจสอบว่ามีการเลือกประเภทรายงานหรือไม่
+                if (reportTypes.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'คำเตือน',
+                        text: 'กรุณาเลือกอย่างน้อยหนึ่งประเภทรายงาน',
+                        timer: 3000
+                    });
+                    return;
+                }
+
+                var dateRange = $('#dateRange').val();
+                var startDate = dateRange === 'custom' ? $('#startDate').val() : null;
+                var endDate = dateRange === 'custom' ? $('#endDate').val() : null;
+
+                // ตรวจสอบวันที่ถ้าเลือกช่วงวันที่แบบกำหนดเอง
+                if (dateRange === 'custom') {
+                    if (!startDate || !endDate) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'คำเตือน',
+                            text: 'กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด',
+                            timer: 3000
+                        });
+                        return;
+                    }
+                    if (new Date(startDate) > new Date(endDate)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'คำเตือน',
+                            text: 'วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด',
+                            timer: 3000
+                        });
+                        return;
+                    }
+                }
+
+                // รวบรวมสถานีหรือกลุ่มที่เลือก เฉพาะเมื่อเลือก "สรุปการทำงานของ สถานี" หรือ "ส่งออก Data Logs"
+                var selectedItems = [];
+                var stationMode = $('#stationMode').val();
+                if ($('#NodeReport').is(':checked') || $('#LogsExport').is(':checked')) {
+                    selectedItems = $('.station-checkbox:checked').map(function () {
+                        return $(this).val();
+                    }).get();
+
+                    // ตรวจสอบว่ามีการเลือกสถานีหรือกลุ่มหรือไม่
+                    if (selectedItems.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'คำเตือน',
+                            text: 'กรุณาเลือกอย่างน้อยหนึ่งสถานีหรือกลุ่ม',
+                            timer: 3000
+                        });
+                        return;
+                    }
+                }
+
+                var formData = {
+                    reportTypes: reportTypes,
+                    dateRange: dateRange,
+                    startDate: startDate,
+                    endDate: endDate,
+                    format: $('#reportFormat').val(),
+                    stationMode: stationMode,
+                    selectedItems: selectedItems
+                };
+
+                // TODO: เปลี่ยนส่วนนี้ไปเรียก API จริงที่ /api/reports/export
+                // API ควรรับ JSON payload (formData) และส่งกลับ { success: true, downloadUrl: "URL_to_file" }
+                // ตัวอย่าง API endpoint: POST /api/reports/export
+                // Response ควรมี CORS headers ถ้าเซิร์ฟจากโดเมนต่างกัน
+                // ตอนนี้ใช้ Mock ไปก่อน
+                let mockDownloadUrl = '';
+                if ($('#reportFormat').val() === 'pdf') {
+                    mockDownloadUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'; // Mock PDF URL
+                } else {
+                    mockDownloadUrl = 'https://file-examples.com/storage/fe4f2a2c6c8e5e5b2c2e7f2/2017/02/file_example_XLS_10.xls'; // Mock Excel URL
+                }
+
+                if (mockDownloadUrl) {
+                    downloadUrl = mockDownloadUrl;
+                    $('#reportForm').hide();
+                    $('#previewSection').show();
+                    $('#filePreview').attr('src', downloadUrl);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: 'รายงานถูกส่งออกเรียบร้อยแล้ว (Mock)',
+                        timer: 3000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ข้อผิดพลาด',
+                        text: 'เกิดข้อผิดพลาดในการส่งออกรายงาน (Mock)',
+                        timer: 3000
+                    });
+                }
+            });
+
+            // จัดการปุ่มดาวน์โหลดในส่วน Preview
+            $('#downloadReport').click(function () {
+                if (downloadUrl) {
+                    window.location.href = downloadUrl;
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ข้อผิดพลาด',
+                        text: 'ไม่พบลิงก์ดาวน์โหลด',
+                        timer: 3000
+                    });
+                }
+            });
+
+            // จัดการปุ่มกลับไปแก้ไข
+            $('#backToForm').click(function () {
+                $('#previewSection').hide();
+                $('#reportForm').show();
+                $('#filePreview').attr('src', ''); // ล้าง Preview
+            });
+        });
+    </script>
+
+    <!-- โหลด Bootstrap JS สำหรับ Pagination -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- โหลด Sweet Alerts JS สำหรับการแจ้งเตือน -->
+    <script src="~/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="~/assets/js/pages/notifications.init.js"></script>
+
+    <!-- โหลด App JS -->
+    <script src="~/assets/js/app.js"></script>
+}

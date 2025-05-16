@@ -20,6 +20,11 @@ namespace SJPCORE
         [STAThread]
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.UdpSyslog("192.168.1.50")
+                .WriteTo.Console()
+                .CreateLogger();
             // ตรวจสอบว่ามีการสร้างอินสแตนซ์ของแอปพลิเคชันแล้วหรือไม่
             if (!_mutex.WaitOne(TimeSpan.Zero, true))
             {
@@ -55,20 +60,7 @@ namespace SJPCORE
                 // var url = "http://localhost:5000";
                 // OpenBrowser(url);
                 // host.Run();
-
-                // Log.Logger = new LoggerConfiguration()
-                //     .MinimumLevel.Debug()
-                //     .WriteTo.Console()
-                //     .WriteTo.Syslog(
-                //         host: "your-syslog-server",
-                //         port: 514,
-                //         appName: "SJPCORE",
-                //         facility: SyslogFacility.Local0,
-                //         protocol: SyslogProtocol.Udp,
-                //         format: SyslogFormat.RFC5424
-                //     )
-                //     .CreateLogger();
-
+                
                 try
                 {
                     Log.Information("Starting web host");
@@ -98,6 +90,7 @@ namespace SJPCORE
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog() // ใช้ Serilog
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

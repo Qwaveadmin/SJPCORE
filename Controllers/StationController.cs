@@ -40,7 +40,6 @@ namespace SJPCORE.Controllers
             using (var con = _context.CreateConnection())
             {
                 var station = con.GetList<StationModel>();
-                
                 return View("status-station", station);
             }
         }
@@ -512,7 +511,7 @@ namespace SJPCORE.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _logger.LogError(ex.ToString());
                 return Json(new { success = false, message = ex.Message });
             }
 
@@ -765,7 +764,7 @@ namespace SJPCORE.Controllers
 
                     };
 
-                    Console.WriteLine(JsonConvert.SerializeObject(objfile_mute));
+                    _logger.LogDebug(JsonConvert.SerializeObject(objfile_mute));
 
                     var message_mute = new MqttApplicationMessageBuilder()
                         .WithTopic("/sub/node")
@@ -1072,8 +1071,10 @@ namespace SJPCORE.Controllers
                     {
                         List<string> client_id = new List<string>();
                         var sch = con.GetList<ScheduleModel>().OrderBy(o => o.schtime);            
-                        if (sch.Count() == 0) return;                        
+                        if (sch.Count() == 0) return;     
+
                         Console.WriteLine("Now : " + now.ToString());
+                        
                         var IsOpening = sch.Where(w => w.schtime.Value.ToString() == now.ToString());
                         var IsStoping = sch.Where(w => w.schtime.Value.AddMinutes((double)w.duration).ToString() == now.ToString());
                         var IsPlaying = sch.Where(w => w.schtime.Value < now) ;

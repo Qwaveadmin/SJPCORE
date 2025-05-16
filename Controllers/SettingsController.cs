@@ -33,6 +33,13 @@ namespace SJPCORE.Controllers
             return View("setttings-server");
         }
 
+        [HttpGet]
+        [ActionName("Export")]
+        public IActionResult Report()
+        {
+            return View("report");
+        }
+
         [HttpPost]
         [ActionName("Website")]
         public IActionResult WebSettings([FromBody]SettingModel settings)
