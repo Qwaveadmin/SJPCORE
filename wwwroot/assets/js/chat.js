@@ -162,6 +162,12 @@ async function srconnect() {
             }
         });
 
+        srconnection.on("ReceiveStationStatus", function (onlineStations) {
+            const onlineCount = onlineStations.length;
+            console.log('Online stations:', onlineStations);
+            updateStationLinks(onlineCount);
+        });
+
         srconnection.start()
             .then(() => {
                 console.log('SignalR connection started.');

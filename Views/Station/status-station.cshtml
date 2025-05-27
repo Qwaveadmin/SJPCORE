@@ -263,10 +263,48 @@
     </script>
 
     <script>
+        let srconnection = null;
         $(document).ready(function () {
-            updateStationLinks();
+            $.ajax({
+                url: "/station/online",
+                type: "GET",
+                success: function (response) {
+                    console.log("Station online status retrieved successfully:", response);
+                    // Update the station links with the online status
+                updateStationLinks(response.message);
+                },
+                error: function () {
+                    console.log("Error retrieving station online status");
+                }
+            });
+            
             sendMessagetoCore('stream', '', 'all', 'stop');
         });
+        async function srconnect() {
+            
+            if (!srconnection) {
+
+                srconnection = new signalR.HubConnectionBuilder()
+                    .withUrl('/chatHub')
+                    .build();
+
+                srconnection.on("ReceiveStationStatus", function (onlineStations) {
+                    console.log('Online stations:', onlineStations);
+                    updateStationLinks(onlineStations);
+                });
+
+                srconnection.start()
+                    .then(() => {
+                        console.log('SignalR connection started.');
+                    })
+                    .catch(err => {
+                        console.error('SignalR connection error: ' + err);
+                        setTimeout(() => connect(), 5000);
+                    });
+            }
+        }
+
+        srconnect();
 
         function sendMessagetoCore(messagetype, message, target_uid, cmd) {
 
@@ -295,49 +333,39 @@
             });
         };
 
-        function updateStationLinks() {
-            $.ajax({
-                url: "/station/online",
-                type: "GET",
-                success: function (response) {
-                    var onlineCount = 0;
-                    var offlineCount = 0;
+        function updateStationLinks(response) {
+            var onlineCount = 0;
+            var offlineCount = 0;
 
-                    // loop through each station link and update its class based on whether it is online or not
-                    $('.key-station').each(function () {
-                        var stationId = $(this).attr('id');
-                        var isOnline = false;
+            // loop through each station link and update its class based on whether it is online or not
+            $('.key-station').each(function () {
+                var stationId = $(this).attr('id');
+                var isOnline = false;
 
-                        for (var i = 0; i < response.message.length; i++) {
-                            if (response.message[i].id === stationId) {
-                                isOnline = true;
-                                $('#status-' + stationId).text(response.message[i].status);
-                                break;
-                            }
-                        }
+                for (var i = 0; i < response.length; i++) {
+                    if (response[i].id === stationId) {
+                        isOnline = true;
+                        $('#status-' + stationId).text(response[i].status);
+                        break;
+                    }
+                }
 
-                        if (isOnline) {
-                            $(this).removeClass('link-danger').addClass('link-success');
-                            onlineCount++;
-                        } else {
-                            $(this).removeClass('link-success').addClass('link-danger');
-                            offlineCount++;
-                        }
-                    });
-
-                    // update the online and offline station count in the HTML
-                    $('#station-cnt-online').text(onlineCount);
-                    $('#station-cnt-online').attr('data-target', onlineCount);
-                    $('#station-cnt-offline').text(offlineCount);
-                    $('#station-cnt-offline').attr('data-target', offlineCount);
-                },
-                error: function () {
-                    console.log("Error retrieving station online status");
+                if (isOnline) {
+                    $(this).removeClass('link-danger').addClass('link-success');
+                    onlineCount++;
+                } else {
+                    $(this).removeClass('link-success').addClass('link-danger');
+                    offlineCount++;
                 }
             });
+
+            // update the online and offline station count in the HTML
+            $('#station-cnt-online').text(onlineCount);
+            $('#station-cnt-online').attr('data-target', onlineCount);
+            $('#station-cnt-offline').text(offlineCount);
+            $('#station-cnt-offline').attr('data-target', offlineCount);
         }
 
-        setInterval(updateStationLinks, 1000);
     </script>
     <script>
         document.getElementById("btnplaynow").addEventListener("click", function () {

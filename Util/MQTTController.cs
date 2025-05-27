@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using MQTTnet;
 using MQTTnet.Client;
@@ -14,6 +15,7 @@ using SJPCORE.Models;
 using SJPCORE.Models.Mqtt;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,17 +27,20 @@ namespace SJPCORE.Util
             private readonly MqttServer _mqttServer;
             private readonly DapperContext _context;
             private readonly IHubContext<ChatHub> _hubContext;
+            private readonly ILogger<MQTTController> _logger;
 
-        public MQTTController(MqttServer mqttServer, IHubContext<ChatHub> hubContext , DapperContext dapperContext)
+        public MQTTController(MqttServer mqttServer, IHubContext<ChatHub> hubContext, DapperContext dapperContext, ILogger<MQTTController> logger)
         {
             this._mqttServer = mqttServer;
             this._hubContext = hubContext;
             this._context = dapperContext;
+            this._logger = logger;
 
             mqttServer.InterceptingPublishAsync += async args =>
             {
-               await HandleInterceptedMessage(args.ApplicationMessage);
+                await HandleInterceptedMessage(args.ApplicationMessage);
             };
+
         }
 
 
@@ -182,15 +187,76 @@ namespace SJPCORE.Util
         {
             await _hubContext.Clients.All.SendAsync("ClientConnected", "HandleMessageNotConsumedAsync " + eventArgs.ApplicationMessage);
         }
-        
+
         public async Task OnClientConnected(ClientConnectedEventArgs eventArgs)
         {
-            await _hubContext.Clients.All.SendAsync("ClientConnected", "ClientConnected " + eventArgs.ClientId);
+            _logger.LogCritical($"Client connected: {eventArgs.ClientId} eiei Zapp");
+
+            var result = await _mqttServer.GetClientsAsync();
+
+            var list_result = new List<OnlineModel>();
+
+            using (var con = _context.CreateConnection())
+            {
+                var list_station = await con.GetListAsync<StationModel>();
+
+                foreach (var item in result)
+                {
+                    var station = list_station.Where(w => w.key == item.Id).FirstOrDefault();
+
+                    if(station != null)
+                    {
+                        var list_status = new Dictionary<string, bool>() {
+                              {"media", station.status_media},
+                              {"stream", station.status_stream},
+                              {"schedule", station.status_schedule}
+                        };
+                        var all_false = list_status.Values.All(x => !x);
+                        var status = all_false ? "ออนไลน์" : string.Join(", ", list_status.Where(x => x.Value).Select(x => x.Key == "media" ? "กำลังเล่นเสียง" : x.Key == "stream" ? "กำลังกระจายเสียงตามสาย" : "กำลังเล่นตารางที่กำหนด"));
+                        list_result.Add(new OnlineModel() { Id = item.Id, Status = status });
+                    }
+                   
+                };
+
+            }
+            await _hubContext.Clients.All.SendAsync("ReceiveStationStatus", list_result);
+            
         }
 
         public async Task OnClientDisconnected(ClientDisconnectedEventArgs eventArgs)
         {
-            await _hubContext.Clients.All.SendAsync("ClientConnected", "ClientDisconnected " + eventArgs.ClientId);
+            _logger.LogCritical($"Client disconnected: {eventArgs.ClientId} eiei Zapp");
+            var result = await _mqttServer.GetClientsAsync();
+
+            var list_result = new List<OnlineModel>();
+
+            using (var con = _context.CreateConnection())
+            {
+                var list_station = await con.GetListAsync<StationModel>();
+
+                foreach (var item in result)
+                {
+                    var station = list_station.Where(w => w.key == item.Id).FirstOrDefault();
+
+                    if (station != null)
+                    {
+                        var list_status = new Dictionary<string, bool>() {
+                              {"media", station.status_media},
+                              {"stream", station.status_stream},
+                              {"schedule", station.status_schedule}
+                        };
+                        var all_false = list_status.Values.All(x => !x);
+                        var status = all_false ? "ออนไลน์" : string.Join(", ", list_status.Where(x => x.Value).Select(x => x.Key == "media" ? "กำลังเล่นเสียง" : x.Key == "stream" ? "กำลังกระจายเสียงตามสาย" : "กำลังเล่นตารางที่กำหนด"));
+                        list_result.Add(new OnlineModel() { Id = item.Id, Status = status });
+                    }
+
+                }
+                ;
+
+            }
+            await _hubContext.Clients.All.SendAsync("ReceiveStationStatus", list_result);
+            
+            
         }
 
 

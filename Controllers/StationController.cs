@@ -86,22 +86,22 @@ namespace SJPCORE.Controllers
         [ActionName("online")]
         public async Task<IActionResult> CheckOnline()
         {
-            var objfile_online = new
-            {
-                id = "all",
-                cmd = "state"
-            };
+            // var objfile_online = new
+            // {
+            //     id = "all",
+            //     cmd = "state"
+            // };
 
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("/sub/node")
-                .WithPayload(JsonConvert.SerializeObject(objfile_online))
-                .Build();
+            // var message = new MqttApplicationMessageBuilder()
+            //     .WithTopic("/sub/node")
+            //     .WithPayload(JsonConvert.SerializeObject(objfile_online))
+            //     .Build();
 
-            await _mqttserver.InjectApplicationMessage(
-                new InjectedMqttApplicationMessage(message)
-                {
-                    SenderClientId = "commander"
-                });
+            // await _mqttserver.InjectApplicationMessage(
+            //     new InjectedMqttApplicationMessage(message)
+            //     {
+            //         SenderClientId = "commander"
+            //     });
 
             var result = await _mqttserver.GetClientsAsync();
 

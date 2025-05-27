@@ -193,35 +193,45 @@
     </div>
 </div>
 
+@* testbutton *@
+<button type="button" class="btn btn-primary" id="test-broadcast-btn">ทดสอบการกระจายเสียง</button>
+
 @section scripts{
 
     <script>
         const Model = @Html.Raw(Json.Serialize(Model));
         let IsOnline;
         $(document).ready(function () {
-            updateStationLinks();
-        });
-        function updateStationLinks() {
+
             $.ajax({
                 url: "/station/online",
                 type: "GET",
                 success: function (response) {
                     IsOnline = response.message;
                     var onlineCount = response.message.length;
-                    var offlineCount = '@(Model.Count())' - onlineCount;
-                    // update the online and offline station count in the HTML
-                    $('#station-cnt-online').text(onlineCount);
-                    $('#station-cnt-online').attr('data-target', onlineCount);
-                    $('#station-cnt-offline').text(offlineCount);
-                    $('#station-cnt-offline').attr('data-target', offlineCount);
+                    updateStationLinks(onlineCount);
                 },
                 error: function () {
                     console.log("Error retrieving station online status");
                 }
             });
+            
+        });
+
+        function updateStationLinks(onlineCount) {
+            var offlineCount = '@(Model.Count())' - onlineCount;
+            // update the online and offline station count in the HTML
+            $('#station-cnt-online').text(onlineCount);
+            $('#station-cnt-online').attr('data-target', onlineCount);
+            $('#station-cnt-offline').text(offlineCount);
+            $('#station-cnt-offline').attr('data-target', offlineCount);
         }
 
-        setInterval(updateStationLinks, 3000);
+        @* testbutton function *@
+        $('#test-broadcast-btn').click(function () {
+            updateStationLinks();
+        });
+        @* setInterval(updateStationLinks, 3000); *@
     </script>
     <!-- list.js min js -->
     <script src="~/assets/libs/list.js/list.min.js"></script>

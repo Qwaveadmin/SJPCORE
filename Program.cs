@@ -21,8 +21,13 @@ namespace SJPCORE
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Information()
                 .WriteTo.UdpSyslog("192.168.1.50")
+                .WriteTo.SQLite(
+                    sqliteDbPath: "logs.db", // ตำแหน่งไฟล์ SQLite
+                    tableName: "Logs", // ชื่อตารางใน SQLite
+                    batchSize: 100 // จำนวน log ที่จะบันทึกในแต่ละ batch
+                )
                 .WriteTo.Console()
                 .CreateLogger();
             // ตรวจสอบว่ามีการสร้างอินสแตนซ์ของแอปพลิเคชันแล้วหรือไม่
@@ -90,7 +95,7 @@ namespace SJPCORE
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog() // ใช้ Serilog
+                .UseSerilog() // ใช้ Serilog แทนที่ Default Logger
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
